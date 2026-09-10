@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSEC 4380 · Archive Entry Α · Applied Cryptosystems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --bg:#f6f3ec;
+    --ink:#16150f;
+    --sub:#454236;
+    --muted:#6a6656;
+    --line:#cfc9b6;
+    --card:#fffdf7;
+    --red:oklch(0.53 0.19 25);
+    --red-soft:oklch(0.94 0.045 25);
+    --blue:oklch(0.46 0.14 255);
+    --blue-soft:oklch(0.93 0.03 255);
+    --violet:oklch(0.48 0.15 300);
+    --violet-soft:oklch(0.94 0.035 300);
+    --good:oklch(0.58 0.14 150);
+    --good-soft:oklch(0.94 0.05 150);
+    --bad:oklch(0.55 0.18 25);
+    --bad-soft:oklch(0.94 0.06 25);
+    --amber:oklch(0.72 0.15 75);
+    --amber-soft:oklch(0.95 0.05 75);
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'Space Grotesk', Helvetica, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.5; padding-bottom:60px;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:0 20px;}
+  header.hero{
+    border-bottom:3px solid var(--ink); padding:34px 20px 26px;
+    background: repeating-linear-gradient(135deg, transparent, transparent 26px, rgba(22,21,15,0.03) 26px, rgba(22,21,15,0.03) 27px);
+  }
+  .kicker{
+    font-family:var(--mono); font-size:12.5px; letter-spacing:.06em; color:var(--sub);
+    text-transform:uppercase; display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  }
+  .kicker .dot{color:var(--muted);}
+  .psi{color:var(--violet); font-size:20px; margin-right:2px;}
+  h1.title{font-size:clamp(28px,5vw,44px); line-height:1.05; margin:10px 0 6px; font-weight:700; letter-spacing:-0.01em;}
+  .subtitle{color:var(--sub); font-size:16px; max-width:660px; font-style:italic;}
+  .prompt{font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:16px;}
+
+  .badge{
+    display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.08em;
+    text-transform:uppercase; padding:3px 10px; border:1.5px solid var(--ink); border-radius:3px; margin-bottom:10px;
+  }
+  .badge.risk{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .badge.red{background:var(--red-soft); border-color:var(--red); color:var(--red);}
+  .badge.blue{background:var(--blue-soft); border-color:var(--blue); color:var(--blue);}
+  .badge.plain{background:var(--card);}
+
+  .coord-head{display:flex; align-items:center; gap:14px; margin-bottom:6px;}
+  .coord-letter{
+    font-family:var(--mono); font-size:26px; font-weight:700; color:var(--bg); background:var(--violet);
+    width:44px; height:44px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+
+  section{padding:36px 0; border-bottom:1.5px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2.h{font-size:26px; font-weight:700; margin:0 0 6px; letter-spacing:-0.01em;}
+  .lede{color:var(--sub); margin-bottom:20px; max-width:660px;}
+
+  .card{
+    background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:18px 20px;
+    box-shadow:3px 3px 0 rgba(22,21,15,0.08);
+  }
+  ul.tight{margin:8px 0; padding-left:20px;}
+  ul.tight li{margin-bottom:5px;}
+
+  /* Housekeeping */
+  .house-grid{display:grid; gap:12px;}
+  .house-item{
+    background:var(--card); border:1.5px solid var(--ink); border-radius:8px;
+    padding:14px 16px; display:flex; gap:14px; align-items:flex-start;
+  }
+  .house-item .tag{
+    font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.05em;
+    background:var(--amber-soft); border:1.5px solid var(--ink); border-radius:5px;
+    padding:2px 8px; white-space:nowrap; flex-shrink:0; margin-top:2px;
+  }
+  .house-item .tag.urgent{background:var(--bad-soft);}
+
+  /* Intercept / harvest-watch callout */
+  .intercept{
+    background:var(--ink); color:var(--bg); border-radius:8px; padding:18px 20px;
+    position:relative; overflow:hidden;
+  }
+  .intercept::before{
+    content:"INTERCEPT PROJECTION · 2026 → 2040"; display:block; font-family:var(--mono); font-size:10.5px;
+    letter-spacing:.1em; color:oklch(0.75 0.1 300); margin-bottom:10px;
+  }
+  .intercept p{margin:0 0 10px; font-size:14px; color:#e8e4d8; line-height:1.55;}
+  .intercept ul{margin:10px 0 0; padding-left:18px;}
+  .intercept li{font-size:13.5px; color:#d8d4c6; margin-bottom:5px;}
+  .intercept strong{color:#fff;}
+
+  /* Mosca calculator */
+  .calc-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px;}
+  @media (max-width:560px){.calc-grid{grid-template-columns:1fr;}}
+  .calc-field{background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:12px 14px;}
+  .calc-field label{display:block; font-family:var(--mono); font-size:11.5px; color:var(--sub); margin-bottom:6px;}
+  .calc-field input{width:100%; padding:7px 9px; border:1.5px solid var(--line); border-radius:5px; font-family:var(--mono); font-size:15px; background:var(--bg); color:var(--ink);}
+  #moscaResult{margin-top:14px; padding:14px 16px; border-radius:8px; border:1.5px solid var(--ink); font-family:var(--mono); font-size:14px;}
+  #moscaResult.late{background:var(--bad-soft); border-color:var(--bad);}
+  #moscaResult.ok{background:var(--good-soft); border-color:var(--good);}
+
+  /* Temporal index route */
+  .route-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px;}
+  .route-stop{
+    border:1.5px solid var(--line); border-radius:7px; padding:9px 10px; background:var(--card); font-size:12px;
+  }
+  .route-stop.current{border-color:var(--violet); background:var(--violet-soft); box-shadow:2px 2px 0 rgba(22,21,15,0.08);}
+  .route-stop .gl{font-family:var(--mono); font-weight:700; font-size:15px; color:var(--violet);}
+  .route-stop.current .gl{color:var(--violet);}
+  .route-stop .rn{color:var(--sub); display:block; margin-top:2px; line-height:1.25;}
+
+  /* Field kit / instruments cards */
+  .std-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px;}
+  .std-card{border:1.5px solid var(--ink); border-radius:8px; padding:14px; background:var(--card);}
+  .std-card .name{font-family:var(--mono); font-weight:700; font-size:14px; color:var(--violet);}
+  .std-card p{font-size:12.5px; color:var(--sub); margin:6px 0 0;}
+
+  /* Promise cards */
+  .promise-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px;}
+  .promise-card{border:1.5px solid var(--ink); border-radius:8px; padding:14px 16px; background:var(--card);}
+  .promise-card .k{font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--violet); margin-bottom:4px;}
+  .promise-card p{font-size:13.5px; margin:0; color:var(--sub);}
+
+  /* Data tables */
+  .tbl-wrap{overflow-x:auto;}
+  table.data{width:100%; border-collapse:collapse; font-size:13px;}
+  table.data th, table.data td{border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top;}
+  table.data th{background:var(--ink); color:var(--bg); font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em;}
+  table.data td.dead{color:var(--bad);}
+  table.data td.alive{color:var(--good);}
+  table.data tr:nth-child(even) td{background:rgba(22,21,15,0.02);}
+
+  /* Command line block */
+  .term{
+    background:var(--ink); color:#d8f0c8; font-family:var(--mono); font-size:13px; border-radius:8px;
+    padding:16px 18px; line-height:1.7; overflow-x:auto;
+  }
+  .term .c{color:#7dd3a0;}
+  .term .out{color:#9b95805e; color:#a8a290;}
+  .term .cmt{color:#8a8570;}
+
+  /* Hybrid steps */
+  .steplist{list-style:none; margin:0; padding:0; counter-reset:step;}
+  .steplist li{counter-increment:step; padding:8px 0 8px 34px; position:relative; font-size:14.5px; border-bottom:1px dashed var(--line);}
+  .steplist li:last-child{border-bottom:none;}
+  .steplist li::before{
+    content:counter(step); position:absolute; left:0; top:6px; font-family:var(--mono); font-weight:700; font-size:12px;
+    width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:var(--violet); color:var(--bg);
+  }
+
+  /* Attacks cards */
+  .attack-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px;}
+  .attack-card{border:1.5px solid var(--ink); border-radius:8px; padding:14px 16px; background:var(--card);}
+  .attack-card .k{font-weight:700; font-size:14.5px; margin-bottom:4px;}
+  .attack-card p{font-size:13px; color:var(--sub); margin:0;}
+
+  /* Morning timeline */
+  .morn-list{display:flex; flex-direction:column; gap:0;}
+  .morn-item{display:flex; gap:14px; padding:11px 0; border-bottom:1px dashed var(--line);}
+  .morn-item:last-child{border-bottom:none;}
+  .morn-ic{font-size:20px; flex-shrink:0; width:30px; text-align:center;}
+  .morn-item b{font-size:14.5px;}
+  .morn-item p{margin:2px 0 0; font-size:13px; color:var(--sub);}
+
+  /* Paradox cards */
+  .paradox-card{
+    border:1.5px solid var(--violet); border-radius:8px; padding:14px 16px; background:var(--violet-soft); margin-bottom:10px;
+  }
+  .paradox-card .pn{font-family:var(--mono); font-weight:700; color:var(--violet); font-size:12px; margin-bottom:4px;}
+  .paradox-card p{margin:0; font-size:14px; color:var(--sub);}
+
+  /* Petals */
+  .petal-row{display:flex; gap:10px; flex-wrap:wrap;}
+  .petal{
+    flex:1; min-width:120px; border:1.5px solid var(--ink); border-radius:8px; padding:14px; text-align:center; background:var(--card);
+  }
+  .petal .yr{font-family:var(--mono); font-weight:700; font-size:20px; color:var(--red);}
+  .petal .lbl{font-size:12px; color:var(--sub); margin-top:4px;}
+
+  /* Takeaways */
+  .take-grid{display:grid; gap:10px;}
+  .take-item{display:flex; gap:12px; align-items:flex-start; background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:12px 14px;}
+  .take-item .ico{font-family:var(--mono); font-weight:700; color:var(--bg); background:var(--violet); border-radius:50%; width:26px; height:26px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:13px;}
+
+  /* Quiz */
+  .quiz-card{border:1.5px solid var(--ink); border-radius:8px; padding:16px; background:var(--card); margin-bottom:14px;}
+  .quiz-q{font-weight:600; margin-bottom:10px;}
+  .quiz-opts{display:flex; flex-direction:column; gap:8px;}
+  .quiz-opt{
+    text-align:left; padding:9px 12px; border:1.5px solid var(--line); border-radius:6px; background:var(--bg);
+    cursor:pointer; font-family:var(--sans); font-size:14px; transition:all .15s;
+  }
+  .quiz-opt:hover{border-color:var(--violet);}
+  .quiz-opt.correct{background:var(--good-soft); border-color:var(--good); font-weight:700;}
+  .quiz-opt.wrong{background:var(--bad-soft); border-color:var(--bad);}
+  .quiz-why{display:none; margin-top:10px; font-size:13px; color:var(--sub); border-top:1px dashed var(--line); padding-top:10px;}
+  .quiz-why.show{display:block;}
+  #quizBar{position:sticky; bottom:0; background:var(--ink); color:var(--bg); border-radius:8px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); margin-top:6px;}
+  #quizBar button{font-family:var(--mono); background:var(--bg); color:var(--ink); border:none; border-radius:5px; padding:7px 14px; cursor:pointer; font-weight:700;}
+
+  footer{text-align:center; font-family:var(--mono); font-size:12px; color:var(--muted); padding:30px 20px 0;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker"><span class="psi">Ψ</span>CSEC 4380 <span class="dot">·</span> ARCHIVE ENTRY Α <span class="dot">·</span> RECOVERED 2040 <span class="dot">·</span> Dr. Robert Jones</div>
+    <h1 class="title">Applied Cryptosystems</h1>
+    <p class="subtitle">Field notes of a cryptographic historian, writing from 2040, on the encryption of the Late Pre-Quantum Era: what it promised, how it worked, and which of its secrets survived.</p>
+    <div class="prompt">subspace.xytify.net/4380 · Thursdays 1600–1845</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- HOUSEKEEPING -->
+  <section>
+    <span class="badge plain">📌 This Week's Tasks</span>
+    <h2 class="h">Before Next Thursday</h2>
+    <div class="house-grid">
+      <div class="house-item"><span class="tag urgent">DUE 9/3 · 11:59PM</span><div><strong>Census assignment</strong> — 25 pts, assigned tonight. Census date is 9/9 — miss it and financial aid gets weird.</div></div>
+      <div class="house-item"><span class="tag">READING</span><div>Get O'Reilly access — <em>Real World Cryptography</em> (2021), free through the university link on the course site. Skim ch. 4 (authenticated encryption) and ch. 6 (asymmetric) — they sit under the next two coordinates.</div></div>
+      <div class="house-item"><span class="tag">INSTALL</span><div>Get GnuPG and OpenSSL working on your machine before next Thursday. Assignment 1 (out 9/10) depends on GnuPG.</div></div>
+      <div class="house-item"><span class="tag">BOOKMARK</span><div>subspace.xytify.net/4380 — every deck and ancillary file lives there, and nowhere else.</div></div>
+      <div class="house-item"><span class="tag">GRADING</span><div>5 assignments spread through the semester, always at least a week to complete, 5 days of grace to turn in late. Midterm is 75 pts, first/second week of October. Optional assignment near the end. AI use is permitted with citation — establish provenance, don't just paste hallucinations.</div></div>
+    </div>
+  </section>
+
+  <!-- THE PREMISE -->
+  <section>
+    <span class="badge risk">The Premise</span>
+    <h2 class="h">A Transmission From 2040</h2>
+    <p class="lede">This course is narrated from 2040, looking back at the cryptography of 2026 — the last generation designed before large quantum computers. Adversaries in your present are recording encrypted traffic they cannot read, betting that in ten to fifteen years they can. We in 2040 know how that bet paid off.</p>
+    <div class="intercept">
+      <p><strong>Harvest now, decrypt later:</strong> every ciphertext you transmit in 2026 should be assumed archived. The only question is whether it still matters when it finally opens. Your job this semester: judge which of these secrets reach 2040.</p>
+    </div>
+  </section>
+
+  <!-- MOSCA CALCULATOR -->
+  <section>
+    <span class="badge risk">Mosca's Inequality</span>
+    <h2 class="h">Are You Already Late?</h2>
+    <p class="lede">x = years your secret must hold · y = years to migrate systems · z = years until the quantum threat. If x + y &gt; z, you are already late. Try your own numbers.</p>
+    <div class="calc-grid">
+      <div class="calc-field"><label>x — secret's shelf life (yrs)</label><input type="number" id="moscaX" value="10" min="0"></div>
+      <div class="calc-field"><label>y — years to migrate</label><input type="number" id="moscaY" value="3" min="0"></div>
+      <div class="calc-field"><label>z — years to quantum threat</label><input type="number" id="moscaZ" value="10" min="0"></div>
+    </div>
+    <div id="moscaResult"></div>
+  </section>
+
+  <!-- TEMPORAL INDEX -->
+  <section>
+    <span class="badge plain">Temporal Index</span>
+    <h2 class="h">The Route Through the Archive</h2>
+    <p class="lede">Fourteen coordinates, α through ξ, one per Thursday, in the order the syllabus sets. Ω is the final. The marker is our current position.</p>
+    <div class="route-grid" id="routeGrid"></div>
+  </section>
+
+  <!-- FIELD KIT -->
+  <section>
+    <span class="badge plain">Field Kit</span>
+    <h2 class="h">What You Carry Into the Era</h2>
+    <p class="lede">Prerequisites — nothing new to learn today, just confirming you have it.</p>
+    <div class="std-grid">
+      <div class="std-card"><div class="name">Security fundamentals</div><p>CIA triad, AAA, threat vs. vulnerability vs. risk, defense in depth from CSEC 1360/2360.</p></div>
+      <div class="std-card"><div class="name">Networking</div><p>TCP/IP, ports, TLS at a hand-wave level. Wireshark basics from CSEC 2306.</p></div>
+      <div class="std-card"><div class="name">Linux command line</div><p>ssh, file editing, piping, permissions. You will live in a terminal this semester.</p></div>
+      <div class="std-card"><div class="name">A little math courage</div><p>Exponents, modular arithmetic (will be reviewed). No proofs — applied means applied.</p></div>
+    </div>
+  </section>
+
+  <!-- INSTRUMENTS -->
+  <section>
+    <span class="badge plain">Instruments</span>
+    <h2 class="h">Tools of the Period</h2>
+    <div class="std-grid">
+      <div class="std-card"><div class="name">GnuPG</div><p>Key generation, asymmetric email, signing. Assignment 1 depends on it.</p></div>
+      <div class="std-card"><div class="name">OpenSSL</div><p>The era's swiss army machete: hashing, encrypting, certs, s_client.</p></div>
+      <div class="std-card"><div class="name">Wireshark</div><p>TLS handshakes on the wire. Assignment 2 capture work.</p></div>
+      <div class="std-card"><div class="name">hashcat + CyberChef</div><p>Cracking and encoding. Know the difference between them.</p></div>
+      <div class="std-card"><div class="name">ca / subspace.xytify.net</div><p>Course servers. You will ssh in and leave your mark in the record.</p></div>
+      <div class="std-card"><div class="name">AI / LLMs</div><p>Permitted with citation. Assignment 4 interrogates them on purpose.</p></div>
+    </div>
+  </section>
+
+  <!-- WHY SUBSPACE -->
+  <section>
+    <span class="badge plain">Field Note</span>
+    <h2 class="h">Why the Box Is Called Subspace</h2>
+    <div class="card">
+      <ul class="tight">
+        <li><strong>Real mathematics:</strong> a subspace is a subset of a vector space closed under addition and scaling. Linear algebra had the word first.</li>
+        <li><strong>Codes are subspaces:</strong> a linear [n,k] error-correcting code is a k-dimensional subspace over a finite field.</li>
+        <li><strong>That is a PQC standard:</strong> HQC, the code-based backup NIST picked alongside ML-KEM in 2025, rests on exactly that. Coordinate λ.</li>
+        <li><strong>Quantum uses it too:</strong> a quantum code protects states inside a code subspace; a decoherence-free subspace is one noise cannot reach.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- COORDINATE ALPHA -->
+  <section>
+    <div class="coord-head"><span class="coord-letter">Α</span><h2 class="h" style="margin:0;">What Cryptography Is</h2></div>
+    <p class="lede">The four promises the era believed it could keep.</p>
+    <div class="card" style="margin-bottom:16px;">
+      <p style="margin:0 0 10px;"><strong>Cryptography:</strong> securing information by transforming it so only intended parties can use it. <strong>Cryptanalysis:</strong> defeating those transformations without the key. <strong>Cryptology:</strong> the umbrella over both — this course lives mostly in the first, visits the second constantly.</p>
+      <p style="margin:0; font-size:13.5px; color:var(--sub);"><em>Etymology:</em> kryptós (hidden) + gráphein (to write). The Greeks named it; we kept their alphabet for the math.</p>
+    </div>
+    <div class="promise-grid">
+      <div class="promise-card"><div class="k">Confidentiality</div><p>Only authorized parties can read it. Encryption's home turf.</p></div>
+      <div class="promise-card"><div class="k">Integrity</div><p>Nobody altered it in transit or at rest. Hashes and MACs.</p></div>
+      <div class="promise-card"><div class="k">Authenticity</div><p>It really came from who it claims. Signatures, certificates.</p></div>
+      <div class="promise-card"><div class="k">Non-repudiation</div><p>The sender cannot deny sending it. Digital signatures + law.</p></div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <strong>What cryptography could not do:</strong>
+      <ul class="tight" style="margin-top:8px;">
+        <li>No endpoint rescue — malware on the laptop reads plaintext before encryption ever happens.</li>
+        <li>No metadata cloak — who talked to whom, when, how much, is often visible even when content is not.</li>
+        <li>No policy substitute — perfect AES with the key taped to the monitor is zero-bit security.</li>
+        <li>No availability — encryption doesn't keep systems up; ransomware used the era's own crypto against it.</li>
+      </ul>
+      <p style="margin:10px 0 0; font-size:13.5px;"><strong>Kerckhoffs's principle:</strong> security must live entirely in the key, never in the secrecy of the algorithm. Crypto moves trust around. It never eliminates the need for it.</p>
+    </div>
+    <div class="intercept" style="margin-top:16px;">
+      <p>Historians confirm what 2026 only suspected: state actors and criminal syndicates were bulk-recording TLS traffic, VPN tunnels, and encrypted archives years before they could open them.</p>
+      <ul>
+        <li><strong>Passive collector:</strong> records — backbone taps, cloud snapshots, stolen encrypted databases.</li>
+        <li><strong>Active adversary:</strong> interferes now — man-in-the-middle, replay, bit-flipping, downgrade.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- COORDINATE BETA: HASHES -->
+  <section>
+    <div class="coord-head"><span class="coord-letter">Β</span><h2 class="h" style="margin:0;">Hash Functions</h2></div>
+    <p class="lede">One-way trips only.</p>
+    <div class="card">
+      <ul class="tight">
+        <li><strong>Fixed-size digest:</strong> any input length in, constant length out (SHA-256: always 256 bits).</li>
+        <li><strong>Deterministic:</strong> same input, same digest, every time, on every machine.</li>
+        <li><strong>Avalanche effect:</strong> flip one input bit, roughly half the output bits flip.</li>
+        <li><strong>Pre-image resistance:</strong> given a digest, infeasible to find any input that produces it.</li>
+        <li><strong>Second pre-image resistance:</strong> given an input, infeasible to find a different input with the same digest.</li>
+        <li><strong>Collision resistance:</strong> infeasible to find any two inputs with the same digest.</li>
+      </ul>
+    </div>
+    <div class="tbl-wrap" style="margin-top:16px;">
+      <table class="data">
+        <tr><th>Algorithm</th><th>Digest</th><th>Status in 2026</th><th>The 2040 Verdict</th></tr>
+        <tr><td>MD5</td><td>128-bit</td><td class="dead">Broken</td><td>A museum piece that refused to die</td></tr>
+        <tr><td>SHA-1</td><td>160-bit</td><td class="dead">Broken (SHAttered, 2017)</td><td>Lingered in git and legacy certs far too long</td></tr>
+        <tr><td>SHA-256 / SHA-2</td><td>256/384/512</td><td class="alive">Standard workhorse</td><td>Survived. Grover only halves its margin</td></tr>
+        <tr><td>SHA-3 (Keccak)</td><td>224–512</td><td class="alive">Standard, different design</td><td>The hedge that paid off</td></tr>
+        <tr><td>BLAKE2 / BLAKE3</td><td>variable</td><td class="alive">Fast, respected</td><td>Still in tooling everywhere</td></tr>
+        <tr><td>bcrypt / Argon2</td><td>n/a</td><td>Password hashing (deliberately slow)</td><td>Different problem: speed is the enemy here</td></tr>
+      </table>
+    </div>
+    <p class="lede" style="margin-top:14px;">Hashing survived the quantum transition far better than public-key crypto did. Remember that asymmetry when we reach coordinate λ.</p>
+    <div class="term" style="margin-top:8px;">
+<span class="cmt"># same word, one capital letter — total digest chaos</span>
+$ echo -n <span class="c">'prequantum'</span> | sha256sum
+41ca5537...  -
+$ echo -n <span class="c">'Prequantum'</span> | sha256sum
+9f86d081...  -   <span class="cmt"># unrecognizable digest</span>
+$ sha256sum archive.iso
+e3b0c442...  archive.iso
+$ openssl dgst -sha3-256 entry-alpha.pdf
+    </div>
+    <p class="lede" style="margin-top:12px;">Verify downloads: digest match = integrity, not authenticity. Coordinate δ adds MACs so digests can prove origin too.</p>
+    <div class="intercept" style="margin-top:16px;">
+      <p>Collectors rarely attacked SHA-256's math. They precomputed digests of common passwords and looked yours up, or forged two documents sharing one digest and swapped them after signing. The Flame malware forged a Microsoft certificate from an MD5 collision in 2012 — fourteen years after MD5 was known weak.</p>
+      <ul>
+        <li><strong>Rainbow tables:</strong> precomputed hash lookups; defeated by salting every password with a unique random value.</li>
+        <li><strong>Collision abuse:</strong> two contracts, one digest, one signature — the signature authenticates both.</li>
+      </ul>
+      <p style="margin-top:8px;"><strong>Assignment 2:</strong> you will find and document a real hash collision yourself.</p>
+    </div>
+  </section>
+
+  <!-- COORDINATE GAMMA: SYMMETRIC -->
+  <section>
+    <div class="coord-head"><span class="coord-letter">Γ</span><h2 class="h" style="margin:0;">Symmetric Cryptography</h2></div>
+    <p class="lede">One key, both directions, blazing fast.</p>
+    <div class="card">
+      <ul class="tight">
+        <li><strong>One shared secret:</strong> the same key encrypts and decrypts; anyone holding it can do both.</li>
+        <li><strong>Speed:</strong> hardware AES moves gigabytes per second — why bulk data always travels symmetric.</li>
+        <li><strong>The catch:</strong> both parties must already share the key securely, which is itself the hard problem.</li>
+        <li><strong>Scaling pain:</strong> n people needing pairwise secrecy require n(n−1)/2 keys — 40 students = 780 keys.</li>
+      </ul>
+    </div>
+    <div class="tbl-wrap" style="margin-top:16px;">
+      <table class="data">
+        <tr><th>Cipher</th><th>Type</th><th>Key Size</th><th>The 2040 Verdict</th></tr>
+        <tr><td>DES</td><td>Block (Feistel)</td><td>56-bit</td><td class="dead">Dead before your era. Brute-forced since the 90s</td></tr>
+        <tr><td>3DES</td><td>Block (Feistel)</td><td>112/168</td><td class="dead">NIST retired it end of 2023; archaeology now</td></tr>
+        <tr><td>AES (Rijndael)</td><td>Block (SPN)</td><td>128/192/256</td><td class="alive">Survived. AES-256 outlived the quantum transition</td></tr>
+        <tr><td>Blowfish / Twofish</td><td>Block (Feistel)</td><td>32–448 / 256</td><td>Niche; Blowfish lives on inside bcrypt</td></tr>
+        <tr><td>ChaCha20</td><td>Stream</td><td>256-bit</td><td class="alive">AES's software rival; survived alongside it</td></tr>
+        <tr><td>RC4</td><td>Stream</td><td>40–2048</td><td class="dead">Broken, banned from TLS. Recognize it, never use it</td></tr>
+      </table>
+    </div>
+    <p class="lede" style="margin-top:14px;">Grover's algorithm halves effective symmetric key strength. AES-128 becomes 64-bit work; AES-256 becomes 128-bit. This is why symmetric crypto survived and RSA did not.</p>
+    <div class="card" style="margin-top:12px;">
+      <strong>Block ciphers need a mode</strong>
+      <p style="margin:8px 0; font-size:14px; color:var(--sub);">AES encrypts 16 bytes at a time — a mode of operation is the recipe for chaining blocks into real messages.</p>
+      <ul class="tight">
+        <li><strong>ECB:</strong> each block independent; identical plaintext blocks produce identical ciphertext. Never use it — encrypt an image with ECB and the picture is still visible.</li>
+        <li><strong>CBC:</strong> each block XORed with the previous ciphertext; needs a random IV; padding attacks lurk.</li>
+        <li><strong>CTR:</strong> turns AES into a stream cipher via counters; parallel, fast, no padding.</li>
+        <li><strong>GCM:</strong> CTR plus a built-in integrity tag — the mode TLS 1.3 actually requires. Full story at coordinate δ.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- COORDINATE DELTA: ASYMMETRIC -->
+  <section>
+    <div class="coord-head"><span class="coord-letter">Δ</span><h2 class="h" style="margin:0;">Asymmetric Cryptography</h2></div>
+    <p class="lede">Two keys, one-way doors, and the trick that built the pre-quantum internet.</p>
+    <div class="card">
+      <ul class="tight">
+        <li><strong>Key pair:</strong> a public key you publish freely, a private key you never share.</li>
+        <li><strong>Encrypt to public:</strong> anyone can lock a message only the private key opens — confidentiality.</li>
+        <li><strong>Sign with private:</strong> only you can produce a signature anyone can verify with the public key — authenticity.</li>
+        <li><strong>Solves distribution:</strong> no shared secret needed in advance; the collector can watch the whole exchange.</li>
+        <li><strong>The cost:</strong> hundreds to thousands of times slower than AES — it never carried the bulk data.</li>
+      </ul>
+    </div>
+    <div class="tbl-wrap" style="margin-top:16px;">
+      <table class="data">
+        <tr><th>Algorithm</th><th>Hard Problem</th><th>Typical Size</th><th>The 2040 Verdict</th></tr>
+        <tr><td>RSA</td><td>Factoring large semiprimes</td><td>2048–4096 bit</td><td class="dead">Shor's algorithm ended it. Harvested traffic opened first</td></tr>
+        <tr><td>Diffie-Hellman</td><td>Discrete logarithm</td><td>2048+ bit</td><td class="dead">Same fate. Every recorded handshake, retroactively naked</td></tr>
+        <tr><td>ECC / ECDH / ECDSA</td><td>Elliptic curve discrete log</td><td>256–384 bit</td><td class="dead">Smaller keys, same Shor vulnerability</td></tr>
+        <tr><td>Ed25519</td><td>Edwards-curve discrete log</td><td>256-bit</td><td class="dead">Elegant. Also fell</td></tr>
+        <tr><td>ElGamal</td><td>Discrete logarithm</td><td>2048+ bit</td><td class="dead">Inside GnuPG; same story</td></tr>
+        <tr><td>ML-KEM (Kyber)</td><td>Module lattices</td><td>n/a</td><td class="alive">The lifeboat. Already in your browser. Coordinate λ</td></tr>
+      </table>
+    </div>
+    <p class="lede" style="margin-top:14px;">That last column is why harvest-now-decrypt-later was rational, and why your era migrated in a hurry.</p>
+    <div class="card" style="margin-top:14px;">
+      <strong>Hybrid encryption: how it actually shipped</strong>
+      <ol class="steplist" style="margin-top:10px;">
+        <li>Generate a random one-time symmetric session key.</li>
+        <li>Encrypt the actual message with that session key using AES — fast.</li>
+        <li>Encrypt only the tiny session key with the recipient's public key — slow but small.</li>
+        <li>Send both; recipient unlocks the session key, then the message.</li>
+      </ol>
+      <p style="margin-top:10px; font-size:13.5px; color:var(--sub);">TLS, GPG email, Signal, disk escrow — all hybrid. Crack the asymmetric wrapper later, and the harvested symmetric bulk opens with it.</p>
+    </div>
+    <div class="intercept" style="margin-top:16px;">
+      <p><strong>Constant across timelines:</strong> Symmetric for speed. Asymmetric for key exchange and identity. Hashes for integrity. Protocols glue them together — every seam is where the adversary gets in, and the asymmetric seam is the one that didn't survive the era.</p>
+    </div>
+  </section>
+
+  <!-- COORDINATE EPSILON: ATTACKS -->
+  <section>
+    <div class="coord-head"><span class="coord-letter">Ε</span><h2 class="h" style="margin:0;">Attacks: A Field Guide Preview</h2></div>
+    <p class="lede">Coordinate η in miniature.</p>
+    <div class="attack-grid">
+      <div class="attack-card"><div class="k">Brute force</div><p>Try every key. Defeated by key length — 2^128 outlives the sun. Worked fine on 56-bit DES.</p></div>
+      <div class="attack-card"><div class="k">Dictionary + rainbow</div><p>Humans picked words; attackers precomputed the likely ones. Salts + slow hashes were the answer.</p></div>
+      <div class="attack-card"><div class="k">Implementation flaws</div><p>Heartbleed leaked keys from perfect math. Padding oracles, timing leaks, bad RNG.</p></div>
+      <div class="attack-card"><div class="k">The human</div><p>Phished passphrases, keys in git repos, "temporary" debug backdoors. The eternal constant.</p></div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <ul class="tight">
+        <li><strong>Cryptanalysis:</strong> linear and differential attacks shave bits off ciphers — mostly academic against AES.</li>
+        <li><strong>Side channels:</strong> power draw, timing, sound, cache behavior leak keys without touching the math.</li>
+        <li><strong>Protocol downgrade:</strong> POODLE forced servers back to broken SSL 3.0 — attack the negotiation, not the cipher.</li>
+        <li><strong>Key management:</strong> the overwhelming majority of real breaches — stolen, leaked, or guessable keys.</li>
+      </ul>
+      <p style="margin-top:10px; font-size:13.5px;"><strong>Rule of thumb:</strong> in the entire pre-quantum record, almost nobody broke the vault door. They stole the key, copied the blueprints, or bribed the guard. Then quantum broke the door.</p>
+    </div>
+  </section>
+
+  <!-- COORDINATE ZETA: TODAY -->
+  <section>
+    <div class="coord-head"><span class="coord-letter">Ζ</span><h2 class="h" style="margin:0;">Crypto You Touched Today</h2></div>
+    <p class="lede">Artifacts of a single 2026 morning.</p>
+    <div class="card">
+      <div class="morn-list">
+        <div class="morn-item"><span class="morn-ic">📱</span><div><b>Unlocked your phone</b><p>Secure enclave verified your face/PIN, released AES file keys.</p></div></div>
+        <div class="morn-item"><span class="morn-ic">🌐</span><div><b>Loaded any website</b><p>TLS 1.3: ECDH agreement, certificate chain, AES-GCM bulk.</p></div></div>
+        <div class="morn-item"><span class="morn-ic">💬</span><div><b>Sent a message</b><p>Signal/WhatsApp: double ratchet, per-message keys.</p></div></div>
+        <div class="morn-item"><span class="morn-ic">💳</span><div><b>Tapped a card</b><p>EMV chip: challenge-response with a per-transaction cryptogram.</p></div></div>
+        <div class="morn-item"><span class="morn-ic">🎮</span><div><b>Launched a game</b><p>Code-signature verification before the OS agreed to run it.</p></div></div>
+        <div class="morn-item"><span class="morn-ic">🚗</span><div><b>Started a car</b><p>Rolling-code key fob — and relay attacks against it, coordinate η.</p></div></div>
+      </div>
+    </div>
+    <div class="loop-cols" style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px;">
+      <div class="card">
+        <strong>Software</strong>
+        <p style="font-size:13.5px; color:var(--sub); margin:6px 0;">VeraCrypt, BitLocker (software mode), LUKS, GPG.</p>
+        <p style="font-size:13px; color:var(--sub); margin:0;">Free, flexible, auditable, portable — but keys live in RAM; cold boot and DMA attacks; malware can watch.</p>
+      </div>
+      <div class="card">
+        <strong>Hardware</strong>
+        <p style="font-size:13.5px; color:var(--sub); margin:6px 0;">TPM 2.0, Apple Secure Enclave, YubiKey, self-encrypting drives, HSMs.</p>
+        <p style="font-size:13px; color:var(--sub); margin:0;">Keys never leave the chip; tamper resistance — but cost, vendor trust, firmware bugs (ROCA broke a generation of TPM keys).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEMPORAL PARADOXES -->
+  <section>
+    <span class="badge risk">Discussion</span>
+    <h2 class="h">Temporal Paradoxes</h2>
+    <p class="lede">Four questions worth sitting with.</p>
+    <div class="paradox-card"><div class="pn">01</div><p>Something you encrypted this week gets decrypted in 2036. Walk through what's actually in there. Does the ten-year delay make it harmless, embarrassing, or dangerous?</p></div>
+    <div class="paradox-card"><div class="pn">02</div><p>Kerckhoffs says the algorithm should be public. Militaries and casinos kept theirs secret anyway. Knowing how the era ended, were they wrong?</p></div>
+    <div class="paradox-card"><div class="pn">03</div><p>Your bank supports a 4-digit PIN rate-limited to 5 attempts. Your email allows unlimited tries against a 20-character passphrase. Which falls first, and to whom?</p></div>
+    <div class="paradox-card"><div class="pn">04</div><p>If you knew with certainty that RSA falls in 2036, what would you change about your digital life today? Now ask why your answer is not already policy.</p></div>
+  </section>
+
+  <!-- THE LAST BLOOM -->
+  <section>
+    <span class="badge plain">Ψ The Last Bloom</span>
+    <h2 class="h">What We Are Burying</h2>
+    <p class="lede">Every fairy tale about a rose under glass is a story about a deadline. Ours has four petals. The most elegant math this field ever built is being buried on schedule. Learn it anyway.</p>
+    <div class="petal-row">
+      <div class="petal"><div class="yr">2026</div><div class="lbl">The clock</div></div>
+      <div class="petal"><div class="yr">2028</div><div class="lbl">The machine</div></div>
+      <div class="petal"><div class="yr">2030</div><div class="lbl">Keys</div></div>
+      <div class="petal"><div class="yr">2031</div><div class="lbl">Signatures</div></div>
+    </div>
+  </section>
+
+  <!-- LOG ENTRY -->
+  <section>
+    <span class="badge plain">Log Entry Α Complete</span>
+    <h2 class="h">The Pre-Quantum Era, Surveyed</h2>
+    <div class="take-grid">
+      <div class="take-item"><span class="ico">1</span><div>Cryptography kept four promises: confidentiality, integrity, authenticity, non-repudiation.</div></div>
+      <div class="take-item"><span class="ico">2</span><div>Hashes are one-way fingerprints; collisions and rainbow tables were how they failed.</div></div>
+      <div class="take-item"><span class="ico">3</span><div>Symmetric was fast with a key-sharing problem; asymmetric solved sharing at 1000× the cost.</div></div>
+      <div class="take-item"><span class="ico">4</span><div>Real systems were hybrid — asymmetric handshake, symmetric bulk. Crack one and you get both.</div></div>
+      <div class="take-item"><span class="ico">5</span><div>Harvest now, decrypt later was not paranoia. It was the era's defining threat model.</div></div>
+    </div>
+    <p class="lede" style="margin-top:16px;">Next coordinate: <strong>β · Symmetric Cryptography</strong>, from Caesar's wheel to AES-256, and why the penguin still matters.</p>
+  </section>
+
+  <!-- QUIZ -->
+  <section>
+    <span class="badge risk">Quick Check</span>
+    <h2 class="h">Test Yourself</h2>
+    <p class="lede">Seven questions on today's vocabulary.</p>
+    <div id="quizContainer"></div>
+    <div id="quizBar">
+      <span><span id="quizScore">0</span>/7 correct</span>
+      <button id="quizReset">Reset</button>
+    </div>
+  </section>
+
+</div>
+
+<footer>Notes compiled from Archive Entry Α — CSEC 4380, TAMU-SA · Fall 2026</footer>
+
+<script>
+// ---------- Mosca calculator ----------
+const mx = document.getElementById('moscaX');
+const my = document.getElementById('moscaY');
+const mz = document.getElementById('moscaZ');
+const mResult = document.getElementById('moscaResult');
+function calcMosca(){
+  const x = parseFloat(mx.value)||0, y = parseFloat(my.value)||0, z = parseFloat(mz.value)||0;
+  const sum = x + y;
+  if(sum > z){
+    mResult.className = 'late';
+    mResult.innerHTML = `x + y = <b>${sum}</b> &gt; z = <b>${z}</b> — <strong>you are already late.</strong> Your secret's shelf life plus your migration time overruns the quantum threat window.`;
+  } else {
+    mResult.className = 'ok';
+    mResult.innerHTML = `x + y = <b>${sum}</b> ≤ z = <b>${z}</b> — <strong>you still have margin.</strong> But margins shrink every year z doesn't move and you don't start migrating.`;
+  }
+}
+[mx,my,mz].forEach(el=>el.addEventListener('input', calcMosca));
+calcMosca();
+
+// ---------- Temporal index route ----------
+const route = [
+  {gl:'α', name:'The Pre-Quantum Era', current:true},
+  {gl:'β', name:'Symmetric'},
+  {gl:'γ', name:'Asymmetric + Math'},
+  {gl:'δ', name:'Hashes, MACs, AEAD'},
+  {gl:'ε', name:'Randomness + CSPRNGs'},
+  {gl:'ζ', name:'Keys, PKI + Distribution'},
+  {gl:'η', name:'Attacks + Midterm'},
+  {gl:'θ', name:'Signatures + Auth Protocols'},
+  {gl:'ι', name:'Secure Comms + Stego'},
+  {gl:'κ', name:'Blockchain'},
+  {gl:'λ', name:'Quantum + PQC'},
+  {gl:'μ', name:'Protocol Design'},
+  {gl:'ν', name:'Cloud + Privacy'},
+  {gl:'ξ', name:'Standards + Review'},
+  {gl:'Ω', name:'Final Exam'}
+];
+const routeGrid = document.getElementById('routeGrid');
+route.forEach(r=>{
+  const el = document.createElement('div');
+  el.className = 'route-stop' + (r.current ? ' current' : '');
+  el.innerHTML = `<span class="gl">${r.gl}</span><span class="rn">${r.name}</span>`;
+  routeGrid.appendChild(el);
+});
+
+// ---------- Quiz ----------
+const quizData = [
+  {q:"Which of the four promises means \"the sender cannot deny sending it\"?", opts:["Confidentiality","Integrity","Authenticity","Non-repudiation"], correct:3, why:"Non-repudiation — backed by digital signatures and, often, the law."},
+  {q:"Kerckhoffs's principle says security should live where?", opts:["In the secrecy of the algorithm","Entirely in the key","In obscuring that encryption is used at all","In the hardware manufacturer"], correct:1, why:"Security must live entirely in the key, never in the secrecy of the algorithm — the algorithm can be public."},
+  {q:"Why did symmetric crypto (AES) survive the quantum transition while RSA did not?", opts:["AES uses bigger keys by default","Grover's algorithm only halves symmetric key strength; Shor's algorithm breaks RSA's math outright","RSA was never actually secure","AES doesn't use a key"], correct:1, why:"Grover halves effective symmetric strength (AES-256 becomes 128-bit work — still safe). Shor's algorithm solves the factoring/discrete-log problems RSA and Diffie-Hellman rely on entirely."},
+  {q:"What defeats rainbow table attacks against password hashes?", opts:["Using a faster hash function","Salting every password with a unique random value","Encrypting the hash output","Using MD5 instead of SHA-256"], correct:1, why:"A unique salt per password means attackers can't reuse one precomputed table across every account."},
+  {q:"In hybrid encryption (how TLS, GPG, and Signal actually ship), what does the asymmetric key encrypt?", opts:["The entire message","Only the small one-time symmetric session key","Nothing — asymmetric is never used","The recipient's identity"], correct:1, why:"AES (fast) encrypts the bulk message; the slow-but-small asymmetric step only wraps the one-time session key."},
+  {q:"Why does the ECB block cipher mode leak information even with strong encryption?", opts:["It uses a weak key size","Identical plaintext blocks always produce identical ciphertext blocks, so patterns show through", "It doesn't actually encrypt anything","It's only vulnerable on stream ciphers"], correct:1, why:"Same plaintext block in, same ciphertext block out, every time — visible as the infamous 'ECB penguin,' where an encrypted image is still recognizable."},
+  {q:"What is \"harvest now, decrypt later\"?", opts:["A backup strategy for lost keys","Recording encrypted traffic today, betting it can be decrypted once quantum computers are powerful enough","A method for cracking passwords faster","A type of ransomware"], correct:1, why:"The course's defining threat model — today's encrypted traffic is being archived by adversaries who expect to read it once RSA/ECC fall to a quantum computer."}
+];
+let quizAnswers = {};
+const quizContainer = document.getElementById('quizContainer');
+function renderQuiz(){
+  quizContainer.innerHTML = '';
+  quizData.forEach((q,qi)=>{
+    const card = document.createElement('div');
+    card.className = 'quiz-card';
+    const answered = quizAnswers[qi] !== undefined;
+    card.innerHTML = `
+      <div class="quiz-q">${qi+1}. ${q.q}</div>
+      <div class="quiz-opts">
+        ${q.opts.map((o,oi)=>{
+          let cls = 'quiz-opt';
+          if(answered){
+            if(oi === q.correct) cls += ' correct';
+            else if(oi === quizAnswers[qi]) cls += ' wrong';
+          }
+          return `<button class="${cls}" data-qi="${qi}" data-oi="${oi}" ${answered?'disabled':''}>${o}</button>`;
+        }).join('')}
+      </div>
+      <div class="quiz-why ${answered?'show':''}">${q.why}</div>
+    `;
+    quizContainer.appendChild(card);
+  });
+  quizContainer.querySelectorAll('.quiz-opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const qi = btn.dataset.qi;
+      if(quizAnswers[qi] !== undefined) return;
+      quizAnswers[qi] = parseInt(btn.dataset.oi);
+      renderQuiz();
+      updateScore();
+    });
+  });
+}
+function updateScore(){
+  const keys = Object.keys(quizAnswers);
+  const score = keys.filter(k=>quizAnswers[k]===quizData[k].correct).length;
+  document.getElementById('quizScore').textContent = score;
+}
+document.getElementById('quizReset').addEventListener('click', ()=>{
+  quizAnswers = {}; renderQuiz(); updateScore();
+});
+renderQuiz();
+updateScore();
+</script>
+</body>
+</html>
