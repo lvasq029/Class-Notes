@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CETE 3370 · Class 03 · Cloud Service Models</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --bg:#f6f3ec;
+    --ink:#16150f;
+    --sub:#454236;
+    --muted:#6a6656;
+    --line:#cfc9b6;
+    --card:#fffdf7;
+    --red:oklch(0.53 0.19 25);
+    --red-soft:oklch(0.94 0.045 25);
+    --blue:oklch(0.46 0.14 255);
+    --blue-soft:oklch(0.93 0.03 255);
+    --violet:oklch(0.48 0.15 300);
+    --violet-soft:oklch(0.94 0.035 300);
+    --good:oklch(0.58 0.14 150);
+    --good-soft:oklch(0.94 0.05 150);
+    --bad:oklch(0.55 0.18 25);
+    --bad-soft:oklch(0.94 0.06 25);
+    --amber:oklch(0.72 0.15 75);
+    --amber-soft:oklch(0.95 0.05 75);
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'Space Grotesk', Helvetica, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.5; padding-bottom:60px;}
+  .wrap{max-width:920px; margin:0 auto; padding:0 20px;}
+  header.hero{
+    border-bottom:3px solid var(--ink);
+    padding:34px 20px 26px;
+    background:repeating-linear-gradient(135deg, transparent, transparent 26px, rgba(22,21,15,0.03) 26px, rgba(22,21,15,0.03) 27px);
+  }
+  .kicker{font-family:var(--mono); font-size:12.5px; letter-spacing:.06em; color:var(--sub); text-transform:uppercase; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .kicker .dot{color:var(--muted);}
+  h1.title{font-size:clamp(28px,5vw,44px); line-height:1.05; margin:10px 0 6px; font-weight:700; letter-spacing:-0.01em;}
+  .subtitle{color:var(--sub); font-size:16px; max-width:620px;}
+  .prompt{font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:16px;}
+  .backlink{font-family:var(--mono); font-size:12px; color:var(--muted); text-decoration:none; display:inline-block; margin-bottom:12px;}
+  .backlink:hover{color:var(--violet);}
+
+  .badge{display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:3px 10px; border:1.5px solid var(--ink); border-radius:3px; margin-bottom:10px;}
+  .badge.risk{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .badge.red{background:var(--red-soft); border-color:var(--red); color:var(--red);}
+  .badge.blue{background:var(--blue-soft); border-color:var(--blue); color:var(--blue);}
+  .badge.plain{background:var(--card);}
+
+  section{padding:36px 0; border-bottom:1.5px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2.h{font-size:26px; font-weight:700; margin:0 0 6px; letter-spacing:-0.01em;}
+  .lede{color:var(--sub); margin-bottom:20px; max-width:640px;}
+
+  .card{background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:18px 20px; box-shadow:3px 3px 0 rgba(22,21,15,0.08);}
+  ul.tight{margin:8px 0; padding-left:20px;}
+  ul.tight li{margin-bottom:5px;}
+
+  /* Housekeeping */
+  .house-grid{display:grid; gap:12px;}
+  .house-item{background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:14px 16px; display:flex; gap:14px; align-items:flex-start;}
+  .house-item .tag{font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.05em; background:var(--amber-soft); border:1.5px solid var(--ink); border-radius:5px; padding:2px 8px; white-space:nowrap; flex-shrink:0; margin-top:2px;}
+  .house-item a{color:var(--blue); word-break:break-all;}
+
+  /* NIST quote */
+  .nist{border-left:5px solid var(--violet);}
+  .nist blockquote{margin:0 0 12px; font-size:15.5px; color:var(--ink);}
+  .nist mark{background:var(--amber-soft); border-bottom:2px solid var(--amber); padding:0 2px; color:inherit;}
+  .nist-counts{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-top:14px;}
+  .nist-count{border:1.5px solid var(--line); border-radius:7px; background:var(--bg); padding:10px 12px; text-align:center;}
+  .nist-count b{display:block; font-family:var(--mono); font-size:28px; color:var(--violet);}
+  .nist-count span{font-size:12.5px; color:var(--sub);}
+
+  /* Tabs */
+  .loop-tabs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;}
+  .loop-tab{font-family:var(--mono); font-size:12.5px; font-weight:600; border:1.5px solid var(--ink); border-radius:6px; background:var(--card); padding:8px 14px; cursor:pointer; transition:all .15s;}
+  .loop-tab.active{background:var(--violet); color:var(--bg); border-color:var(--violet);}
+  .loop-tab:hover:not(.active){background:var(--violet-soft);}
+  .loop-tab.t-red.active{background:var(--red); border-color:var(--red);}
+  .loop-tab.t-blue.active{background:var(--blue); border-color:var(--blue);}
+  .loop-tab.t-good.active{background:var(--good); border-color:var(--good);}
+  .loop-tab.t-amber.active{background:var(--amber); border-color:var(--amber); color:var(--ink);}
+  .tag-chip{font-family:var(--mono); font-size:11.5px; padding:4px 10px; border:1.5px solid var(--line); border-radius:999px; color:var(--sub); background:var(--bg);}
+
+  /* Responsibility stack */
+  .stack{display:flex; flex-direction:column; gap:4px; margin:14px 0;}
+  .layer{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 12px; border:1.5px solid var(--ink); border-radius:5px; font-size:13.5px; font-weight:600; transition:background .2s;}
+  .layer small{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; font-weight:700;}
+  .layer.you{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .layer.them{background:var(--bg); border-color:var(--line); color:var(--muted);}
+  .ex-row{display:flex; justify-content:space-between; gap:12px; font-size:14px; padding:8px 0; border-top:1px dashed var(--line);}
+  .ex-row strong{color:var(--blue); flex-shrink:0;}
+  .ex-row span{text-align:right;}
+
+  /* Accordion */
+  .acc-item{border:1.5px solid var(--ink); border-radius:8px; background:var(--card); padding:14px 16px; cursor:pointer; margin-bottom:10px; transition:box-shadow .15s;}
+  .acc-item:hover{box-shadow:3px 3px 0 rgba(22,21,15,0.08);}
+  .acc-head{display:flex; justify-content:space-between; align-items:center; gap:10px;}
+  .acc-head strong{font-size:15.5px;}
+  .acc-plus{font-family:var(--mono); font-size:18px; color:var(--violet); flex-shrink:0; transition:transform .2s;}
+  .acc-item.open .acc-plus{transform:rotate(45deg);}
+  .acc-body{max-height:0; overflow:hidden; transition:max-height .25s ease;}
+  .acc-item.open .acc-body{max-height:320px;}
+  .acc-body p{font-size:14px; color:var(--sub); margin:10px 0 0; padding-top:10px; border-top:1px dashed var(--line);}
+  .acc-body .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;}
+
+  /* Stats */
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px;}
+  .stat .big{font-family:var(--mono); font-size:34px; font-weight:700; color:var(--blue); line-height:1.1;}
+  .stat .lbl{font-size:13px; color:var(--sub); margin-top:4px;}
+
+  /* Zone demo */
+  .zone-wrap{display:grid; gap:12px;}
+  .region-box{border:1.5px dashed var(--ink); border-radius:10px; padding:14px; background:var(--card);}
+  .region-name{font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.05em; margin-bottom:10px;}
+  .zones{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px;}
+  .zone{border:1.5px solid var(--ink); border-radius:8px; padding:12px; background:var(--good-soft); cursor:pointer; transition:all .2s; user-select:none;}
+  .zone:hover{box-shadow:3px 3px 0 rgba(22,21,15,0.1);}
+  .zone .zn{font-family:var(--mono); font-size:12.5px; font-weight:700;}
+  .zone .vm{margin-top:8px; font-size:13px; border:1.5px solid var(--good); background:var(--bg); border-radius:5px; padding:6px 8px;}
+  .zone.down{background:var(--bad-soft); border-color:var(--bad); opacity:.85;}
+  .zone.down .vm{border-color:var(--bad); text-decoration:line-through; color:var(--muted);}
+  .zone-status{margin-top:12px; font-size:14px; padding:10px 14px; border-radius:6px; border:1.5px solid var(--ink); background:var(--good-soft); font-weight:600;}
+  .zone-status.warn{background:var(--amber-soft);}
+  .zone-status.bad{background:var(--bad-soft);}
+
+  /* Checklist */
+  .cmd-status{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:14px 18px; margin-bottom:14px;}
+  .cmd-count{font-family:var(--mono); font-size:24px; color:var(--violet); font-weight:700;}
+  .cmd-bar-track{flex:1; min-width:140px; height:8px; background:var(--line); border-radius:999px; overflow:hidden;}
+  .cmd-bar-fill{height:100%; width:0%; background:var(--violet); border-radius:999px; transition:width .35s;}
+  .ghost-btn{font-family:var(--mono); font-size:11.5px; letter-spacing:.05em; text-transform:uppercase; padding:7px 13px; background:var(--bg); border:1.5px solid var(--ink); border-radius:999px; color:var(--ink); cursor:pointer;}
+  .ghost-btn:hover{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .cmd-item{display:flex; align-items:flex-start; gap:12px; padding:12px 14px; background:var(--card); border:1.5px solid var(--line); border-radius:7px; cursor:pointer; transition:opacity .2s, border-color .2s; margin-bottom:8px;}
+  .cmd-item.done{opacity:0.55; border-color:var(--good);}
+  .cmd-check{flex-shrink:0; width:22px; height:22px; border-radius:5px; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:13px; color:var(--bg); margin-top:1px; background:var(--bg);}
+  .cmd-item.done .cmd-check{background:var(--good); border-color:var(--good);}
+  .cmd-item p{margin:0; font-size:14.5px;}
+  .cmd-callout{margin-top:14px; background:var(--amber-soft); border:1.5px solid var(--ink); border-left:4px solid var(--amber); border-radius:6px; padding:14px 16px; font-size:13.5px; line-height:1.5; color:var(--sub);}
+
+  /* Cheat sheet */
+  .cheat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px;}
+  .cheat-card .label{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--violet); margin-bottom:6px;}
+  .cheat-card p{font-size:13.5px; line-height:1.45; margin:0; color:var(--sub);}
+
+  /* Quiz */
+  .quiz-card{border:1.5px solid var(--ink); border-radius:8px; padding:16px; background:var(--card); margin-bottom:14px;}
+  .quiz-q{font-weight:600; margin-bottom:10px;}
+  .quiz-opts{display:flex; flex-direction:column; gap:8px;}
+  .quiz-opt{text-align:left; padding:9px 12px; border:1.5px solid var(--line); border-radius:6px; background:var(--bg); cursor:pointer; font-family:var(--sans); font-size:14px; transition:all .15s; color:var(--ink);}
+  .quiz-opt:hover:not(:disabled){border-color:var(--violet);}
+  .quiz-opt.correct{background:var(--good-soft); border-color:var(--good); font-weight:700;}
+  .quiz-opt.wrong{background:var(--bad-soft); border-color:var(--bad);}
+  .quiz-why{display:none; margin-top:10px; font-size:13px; color:var(--sub); border-top:1px dashed var(--line); padding-top:10px;}
+  .quiz-why.show{display:block;}
+  .quizbar{position:sticky; bottom:0; background:var(--ink); color:var(--bg); border-radius:8px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); margin-top:6px;}
+  .quizbar button{font-family:var(--mono); background:var(--bg); color:var(--ink); border:none; border-radius:5px; padding:7px 14px; cursor:pointer; font-weight:700;}
+
+  .quiz-mine{font-family:var(--mono); font-size:11.5px; display:inline-block; margin-top:10px; padding:2px 10px; border-radius:999px; border:1.5px solid;}
+  .quiz-mine.ok{border-color:var(--good); background:var(--good-soft);}
+  .quiz-mine.no{border-color:var(--bad); background:var(--bad-soft);}
+  .pair-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-top:16px;}
+  .pair-card .label{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--red); margin-bottom:6px;}
+  .pair-card p{font-size:13.5px; margin:4px 0; color:var(--sub);}
+
+  footer{text-align:center; font-family:var(--mono); font-size:12px; color:var(--muted); padding:30px 20px 0;}
+  #footerStatus{color:var(--violet); font-weight:600;}
+
+  .flip-inner{transition-timing-function:cubic-bezier(.34,1.56,.64,1);}
+  .flip-card:active .flip-inner{transform:scale(0.97) !important;}
+
+  code{font-family:var(--mono); font-size:12.5px; background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:1px 5px; color:var(--ink);}
+  .cmd-detail{display:block; font-size:12.5px; color:var(--muted); margin-top:3px;}
+  .acc-item.open .acc-body{max-height:900px;}
+  .acc-rich{font-size:14px; color:var(--sub); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);}
+  .acc-rich p{margin:0 0 8px;}
+  .acc-rich ul{margin:6px 0 8px; padding-left:20px;}
+  .acc-rich li{margin-bottom:5px;}
+  .acc-rich blockquote{margin:0 0 8px; padding-left:12px; border-left:3px solid var(--violet);}
+  .acc-body ul{margin:8px 0 0; padding-left:20px; font-size:14px; color:var(--sub);}
+  .acc-body li{margin-bottom:4px;}
+  .grid-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px;}
+  .mini h3{font-size:16px; margin:0 0 4px;}
+  .mini p{font-size:13.5px; color:var(--sub); margin:6px 0 0;}
+  .mini .tag-chip{display:inline-block;}
+  .scroll-x{overflow-x:auto;}
+  table.cmp{width:100%; border-collapse:collapse; font-size:14px; background:var(--card); border:1.5px solid var(--ink); border-radius:8px;}
+  .cmp th,.cmp td{padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top;}
+  .cmp th{font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; background:var(--violet-soft); color:var(--violet);}
+  .cmp td:first-child{font-weight:700;}
+  .cmp tr:last-child td{border-bottom:none;}
+  .spec{display:flex; align-items:center; gap:0; margin:0 0 16px;}
+  .spec .dotp{width:14px; height:14px; border-radius:50%; border:1.5px solid var(--ink); background:var(--bg); flex-shrink:0;}
+  .spec .dotp.on{background:var(--violet); border-color:var(--violet); transform:scale(1.35);}
+  .spec .seg{flex:1; height:2px; background:var(--line);}
+  .spec-lbl{display:flex; justify-content:space-between; font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px;}
+  .sim-top{display:flex; flex-direction:column; gap:6px;}
+  .sim-top input[type=range]{width:100%; accent-color:var(--violet);}
+  .sim-meta{font-size:14px; color:var(--sub); margin-top:8px;}
+  .sim-meta b{font-family:var(--mono); color:var(--ink);}
+  .sim-bars{display:flex; gap:6px; align-items:flex-end; height:150px; margin:14px 0 10px;}
+  .sim-bar{flex:1; min-width:16px; max-width:64px; height:100%; border:1.5px solid var(--ink); border-radius:4px 4px 0 0; background:var(--bg); display:flex; align-items:flex-end; overflow:hidden;}
+  .sim-fill{width:100%; transition:height .25s, background .25s;}
+  .steps-list{font-family:var(--mono); font-size:12.5px; color:var(--sub); border-top:1px dashed var(--line); padding-top:10px; display:flex; flex-direction:column; gap:4px;}
+  .steps-list .hd{font-family:var(--sans); font-size:14px; font-weight:700; color:var(--ink); margin-bottom:4px;}
+  .vmgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:6px;}
+  .vbox{display:flex; flex-direction:column; gap:3px;}
+  .vl{border:1.5px solid var(--ink); border-radius:5px; padding:7px 8px; font-size:12.5px; font-weight:600; text-align:center;}
+  .vl.app{background:var(--blue-soft); border-color:var(--blue); color:var(--blue);}
+  .vl.lib{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .vl.os{background:var(--amber-soft);}
+  .vl.base{background:var(--bg); border-color:var(--line); color:var(--muted); margin-bottom:3px;}
+  .k8s{border:1.5px dashed var(--ink); border-radius:10px; padding:14px; background:var(--card);}
+  .k8s-nodes{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:10px 0;}
+  .k8s-node{border:1.5px solid var(--ink); border-radius:8px; padding:10px; background:var(--blue-soft); cursor:pointer; user-select:none;}
+  .k8s-node .nn{font-family:var(--mono); font-size:11.5px; font-weight:700; margin-bottom:6px;}
+  .k8s-c{display:inline-block; font-size:11.5px; font-family:var(--mono); background:var(--card); border:1.5px solid var(--violet); color:var(--violet); border-radius:4px; padding:2px 6px; margin:2px 3px 2px 0;}
+  .ev-steps{display:flex; flex-direction:column; gap:6px; margin-top:12px;}
+  .ev-step{border:1.5px solid var(--line); border-radius:6px; padding:8px 12px; font-size:14px; background:var(--bg); opacity:0; transform:translateY(4px); transition:all .25s;}
+  .ev-step.show{opacity:1; transform:none; border-color:var(--violet); background:var(--violet-soft);}
+  .tl{display:grid; grid-template-columns:repeat(12,1fr); gap:3px; margin:6px 0 12px;}
+  .tl .slot{height:34px; border:1.5px solid var(--ink); border-radius:4px; background:var(--bg); cursor:pointer;}
+  .tl .slot.on{background:var(--violet);}
+  .tl.vm .slot{background:var(--amber); cursor:default;}
+  .tl-label{font-family:var(--mono); font-size:11.5px; letter-spacing:.04em; color:var(--sub);}
+  .flow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:12px 0;}
+  .flow .node{border:1.5px solid var(--ink); border-radius:6px; padding:8px 12px; font-size:13px; font-weight:600; background:var(--card);}
+  .flow .arr{font-family:var(--mono); color:var(--muted);}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <a class="backlink" href="index.html">← Class Notes index</a>
+    <div class="kicker">CETE 3370 <span class="dot">·</span> CLOUD COMPUTING <span class="dot">·</span> CLASS 03 <span class="dot">·</span> Module 3</div>
+    <h1 class="title">Cloud Service Models</h1>
+    <p class="subtitle">From September 8 — the rest of Google Cloud compute: Cloud Functions, containers and Kubernetes Engine, and Cloud Run, plus the Fancy Store lab behind Lab Assignment 2.</p>
+    <div class="prompt">lvasq@tamusa:~/cloud-computing#</div>
+  </div>
+</header>
+<div class="wrap">
+
+  <!-- ADMIN -->
+  <section>
+    <span class="badge plain">📌 Admin</span>
+    <h2 class="h">Lab Assignment 2</h2>
+    <div class="house-grid">
+      <div class="house-item"><span class="tag">LAB</span><div><strong>Deploy Your Website on Cloud Run</strong>: the Fancy Store web app, built into a container and deployed.</div></div>
+      <div class="house-item"><span class="tag">SHOTS</span><div>At least <strong>seven screenshots</strong>, one per completed task, including the updated Fancy Store page. Every one must show your <strong>student username and project ID</strong>.</div></div>
+      <div class="house-item"><span class="tag">FORMAT</span><div>All screenshots in one Word document, saved as a PDF and submitted as Lab Assignment 2. Also send the editable Word file to the instructor.</div></div>
+      <div class="house-item"><span class="tag">DUE</span><div>Monday at midnight, before the next Tuesday class.</div></div>
+      <div class="house-item"><span class="tag">OPTIONAL</span><div>Cloud Functions: Qwik Start and Kubernetes Engine: Qwik Start are practice labs only, not part of the assignment.</div></div>
+    </div>
+  </section>
+
+  <!-- SPECTRUM -->
+  <section>
+    <span class="badge risk">Compute Spectrum</span>
+    <h2 class="h">From Server-Based to Serverless</h2>
+    <p class="lede">Serverless doesn't mean there's no server. It means <em>you</em> don't set up or manage one. Pick a service to see where it sits.</p>
+    <div class="loop-tabs" id="spTabs"></div>
+    <div class="card" id="spPanel"></div>
+  </section>
+
+  <section>
+    <span class="badge blue">IaaS vs PaaS</span>
+    <h2 class="h">Why the Billing Differs</h2>
+    <p class="lede">GKE conceptually sits between the two: the managed infrastructure of an IaaS with the developer orientation of a PaaS.</p>
+    <div class="scroll-x"><table class="cmp">
+      <tr><th></th><th>Compute Engine (IaaS)</th><th>App Engine (PaaS)</th></tr>
+      <tr><td>You get</td><td>Servers, networking, storage</td><td>Preset runtimes, managed services</td></tr>
+      <tr><td>You pay</td><td>For what you allocate</td><td>For what you use</td></tr>
+      <tr><td>Control</td><td>Customizable installs (web server, DB, middleware), configurable disk space and I/O</td><td>Write code in a self-contained environment with access to RAM, file systems, networking interfaces</td></tr>
+      <tr><td>Trade-off</td><td>Slow and costly</td><td>Independent, rapid scaling</td></tr>
+    </table></div>
+  </section>
+
+  <!-- CLOUD FUNCTIONS -->
+  <section>
+    <span class="badge red">Cloud Functions</span>
+    <h2 class="h">Event-Driven Code</h2>
+    <p class="lede">Function as a Service. Comparable to AWS Lambda and Azure Functions. Click a card to flip it.</p>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" id="cfGrid"></div>
+    <div class="card" style="margin-top:16px;">
+      <strong>Watch an event flow through</strong>
+      <p style="color:var(--sub); margin:6px 0 10px; font-size:14px;">Users upload images, and the app needs them processed in a few ways. Each piece is a small integrated function.</p>
+      <button class="ghost-btn" id="evGo">▶ User uploads an image</button>
+      <div class="ev-steps" id="evSteps"></div>
+    </div>
+  </section>
+
+  <!-- CONTAINERS -->
+  <section>
+    <span class="badge blue">Containers</span>
+    <h2 class="h">Containers vs VMs</h2>
+    <p class="lede">A container groups your code and its dependencies. It scales like PaaS but gives nearly the same flexibility as IaaS.</p>
+    <div class="loop-tabs" id="ctTabs"></div>
+    <div class="card" id="ctPanel"></div>
+    <div id="ctAcc" style="margin-top:14px;"></div>
+  </section>
+
+  <!-- GKE -->
+  <section>
+    <span class="badge risk">Kubernetes</span>
+    <h2 class="h">Clusters, Nodes, Containers</h2>
+    <p class="lede">Kubernetes is a container orchestration tool. Google Kubernetes Engine (GKE) is the managed version, built on open-source Kubernetes, and it manages containers automatically based on specs like CPU and memory. Build a cluster below: click a node to add a container to it.</p>
+    <div class="k8s">
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <span style="font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.05em;">GKE CLUSTER</span>
+        <span style="font-family:var(--mono); font-size:12px; color:var(--sub);" id="k8sSummary"></span>
+      </div>
+      <div class="k8s-nodes" id="k8sNodes"></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="ghost-btn" id="k8sAdd">+ Node</button>
+        <button class="ghost-btn" id="k8sRemove">− Node</button>
+        <button class="ghost-btn" id="k8sReset">Reset (3 nodes)</button>
+      </div>
+    </div>
+    <div class="grid-cards" style="margin-top:14px;">
+      <div class="card mini"><h3>Cluster</h3><p>The big unit under GKE. A group of computers (nodes) working together to run applications.</p></div>
+      <div class="card mini"><h3>Node</h3><p>Think of it as a VM, like a Compute Engine instance with its own OS and CPU settings.</p></div>
+      <div class="card mini"><h3>Container</h3><p>A small unit running on a node. Each can run a separate application.</p></div>
+    </div>
+    <div class="card" style="margin-top:14px; font-size:14px; color:var(--sub);">
+      <strong style="color:var(--ink);">Kubernetes lets you:</strong> install the system on local servers, manage container networking and data storage, deploy apps, and monitor containers with health checks. GKE's equivalents elsewhere: Amazon EKS and Azure AKS.
+    </div>
+  </section>
+
+  <!-- CLOUD RUN -->
+  <section>
+    <span class="badge blue">Cloud Run</span>
+    <h2 class="h">Managed Serverless Containers</h2>
+    <p class="lede">A managed compute platform that runs containers. Serverless, built on Knative (an open API and runtime environment on Kubernetes), and it scales up and down automatically.</p>
+    <div class="loop-tabs" id="crTabs"></div>
+    <div class="card" id="crPanel"></div>
+
+    <div class="card" style="margin-top:16px;">
+      <strong>HTTPS comes free</strong>
+      <div class="flow">
+        <span class="node">Client</span><span class="arr">→ HTTPS →</span><span class="node">Cloud Run proxy</span><span class="arr">→</span><span class="node">Your container</span>
+      </div>
+      <p style="font-size:14px; color:var(--sub); margin:0;">By default your app lives on a unique subdomain of <code>*.run.app</code>, or you can use your own domain. Cloud Run generates a valid SSL certificate, configures SSL termination with secure settings, and decrypts incoming requests before forwarding them to your app.</p>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <strong>You're only charged when your container handles requests</strong>
+      <p style="font-size:14px; color:var(--sub); margin:6px 0 8px;">Click time slots to mark when requests arrive. This is a concept sketch, not real pricing.</p>
+      <div class="tl-label">CLOUD RUN CONTAINER</div>
+      <div class="tl" id="tlRun"></div>
+      <div class="tl-label">COMPUTE ENGINE VM (RUNNING THE WHOLE TIME)</div>
+      <div class="tl vm" id="tlVm"></div>
+      <div class="ex-row"><strong>Billable slots</strong><span id="tlSummary"></span></div>
+    </div>
+  </section>
+
+  <!-- LAB 3 -->
+  <section>
+    <span class="badge risk">Hands-on Lab</span>
+    <h2 class="h">Fancy Store on Cloud Run</h2>
+    <p class="lede">Clone, containerize with Cloud Build, deploy, tweak concurrency, add your name, redeploy. Track your screenshots.</p>
+    <div class="cmd-status">
+      <div style="display:flex; align-items:baseline; gap:8px;">
+        <span class="cmd-count" id="lab_count">0</span>
+        <span style="font-family:var(--mono); font-size:12px; color:var(--sub);">/ 8 steps</span>
+      </div>
+      <div class="cmd-bar-track"><div class="cmd-bar-fill" id="lab_bar"></div></div>
+      <button class="ghost-btn" id="lab_reset">Reset</button>
+    </div>
+    <div id="lab_list"></div>
+    <div class="cmd-callout">⚠️ <strong>Every screenshot needs your student username and project ID visible.</strong> Shrink the browser window or place two windows together so both the task and the account info are in one capture.</div>
+    <h3 style="margin:22px 0 10px; font-size:18px;">Task notes and commands</h3>
+    <div id="labAcc"></div>
+  </section>
+
+  <!-- FROM THE SLIDES -->
+  <section>
+    <span class="badge risk">From the Slides</span>
+    <h2 class="h">Slide-by-Slide Notes</h2>
+    <p class="lede">Everything on the Module 3 deck, grouped the way the agenda runs, including the speaker notes. Click a row to expand it.</p>
+    <div id="slideNotes"></div>
+  </section>
+
+  <section>
+    <span class="badge blue">Vocabulary</span>
+    <h2 class="h">Terms to Know</h2>
+    <p class="lede">Worded from the slides wherever possible.</p>
+    <div class="scroll-x"><table class="cmp">
+      <tr><th>Term</th><th>Meaning</th></tr>
+      <tr><td>FaaS</td><td style="font-weight:400;">Function as a Service. Cloud Functions is Google's, like AWS Lambda and Azure Functions.</td></tr>
+      <tr><td>Serverless</td><td style="font-weight:400;">You don't set up or manage servers. It doesn't mean no servers exist.</td></tr>
+      <tr><td>Event-driven</td><td style="font-weight:400;">Code that runs in response to an event, e.g., an image upload.</td></tr>
+      <tr><td>Container</td><td style="font-weight:400;">A standalone package of your app and what it needs to run; an invisible box around code and dependencies.</td></tr>
+      <tr><td>Container image</td><td style="font-weight:400;">The packaged form of your app that Cloud Build produces and Cloud Run deploys.</td></tr>
+      <tr><td>Docker</td><td style="font-weight:400;">The container format and tooling used in the labs for building images.</td></tr>
+      <tr><td>Kubernetes</td><td style="font-weight:400;">An open-source container orchestration tool.</td></tr>
+      <tr><td>GKE</td><td style="font-weight:400;">Google Kubernetes Engine: managed Kubernetes. A hybrid between IaaS and PaaS.</td></tr>
+      <tr><td>Orchestration</td><td style="font-weight:400;">Managing containers at scale: networking, storage, deployment, monitoring and health checks.</td></tr>
+      <tr><td>Cluster</td><td style="font-weight:400;">A group of computers (nodes) working together to run applications.</td></tr>
+      <tr><td>Node</td><td style="font-weight:400;">A VM in a cluster that hosts containers.</td></tr>
+      <tr><td>Replica</td><td style="font-weight:400;">One of several copies of a container (scaling to multiple replicas).</td></tr>
+      <tr><td>Knative</td><td style="font-weight:400;">The open API and runtime environment, built on Kubernetes, that Cloud Run is built on.</td></tr>
+      <tr><td>Cloud Run</td><td style="font-weight:400;">Fully managed serverless platform for containerized apps; billed only while handling requests.</td></tr>
+      <tr><td>Cloud Build</td><td style="font-weight:400;">Builds your container image from source (used in the lab).</td></tr>
+      <tr><td>Artifact Registry</td><td style="font-weight:400;">The repository where the Docker image is stored (monolith-demo in the lab).</td></tr>
+      <tr><td>Revision</td><td style="font-weight:400;">A version of a Cloud Run service. Redeploying with new settings creates one.</td></tr>
+      <tr><td>Concurrency</td><td style="font-weight:400;">How many requests one container instance handles at a time (80 in the first revision, then 1).</td></tr>
+      <tr><td>SSL termination</td><td style="font-weight:400;">Cloud Run's proxy decrypts HTTPS requests and forwards them to your container.</td></tr>
+      <tr><td>*.run.app</td><td style="font-weight:400;">The default unique subdomain Cloud Run gives your service.</td></tr>
+    </table></div>
+  </section>
+
+  <!-- KNOWLEDGE CHECK -->
+  <section>
+    <span class="badge red">Knowledge Check</span>
+    <h2 class="h">Module 3 Knowledge Check, Replayed</h2>
+    <p class="lede">The 8 poll questions from class. You got 6 of 8 on the original, and the misses are tagged after you answer. Correct answers are from the instructor's walkthrough of the poll results.</p>
+    <div id="kc_container"></div>
+    <div id="kc_bar" class="quizbar">
+      <span><span id="kc_score">0</span>/8 correct</span>
+      <button id="kc_reset">Reset</button>
+    </div>
+    <div class="pair-grid">
+      <div class="card pair-card"><div class="label">Mix-up (Q1, Q4)</div><p><strong>Cloud Functions</strong> = lightweight, event-driven code. Keyword: <em>events</em>.</p><p><strong>Cloud Run</strong> = fully managed serverless platform for containerized apps.</p><p><strong>GKE</strong> = hybrid, orchestrating containers across nodes.</p></div>
+    </div>
+  </section>
+
+  <!-- SLIDE CHECK -->
+  <section>
+    <span class="badge risk">Slide Check</span>
+    <h2 class="h">Questions From the Slides</h2>
+    <p class="lede">8 extra questions written from the deck itself, since slide wording is what tends to show up on exams. These are mine, not your instructor's.</p>
+    <div id="sc_container"></div>
+    <div id="sc_bar" class="quizbar">
+      <span><span id="sc_score">0</span>/8 correct</span>
+      <button id="sc_reset">Reset</button>
+    </div>
+  </section>
+
+  <!-- CHEAT SHEET -->
+  <section>
+    <span class="badge plain">Cheat Sheet</span>
+    <h2 class="h">The Five-Minute-Before-The-Exam Version</h2>
+    <div class="cheat-grid">
+      <div class="card cheat-card"><div class="label">Spectrum</div><p>Compute Engine (IaaS) → GKE (hybrid) → App Engine (PaaS) → Cloud Run (serverless platform) → Cloud Functions (serverless logic).</p></div>
+      <div class="card cheat-card"><div class="label">Cloud Functions</div><p>Small single-purpose functions that respond to events. Node.js, Python, Go. Billed only while code runs.</p></div>
+      <div class="card cheat-card"><div class="label">Container</div><p>Standalone package of your app and what it needs to run. Shares the host OS kernel, starts as fast as a process.</p></div>
+      <div class="card cheat-card"><div class="label">Kubernetes / GKE</div><p>Orchestrates containers. A cluster is a group of nodes (VMs) running apps. Hybrid between IaaS and PaaS.</p></div>
+      <div class="card cheat-card"><div class="label">Cloud Run workflow</div><p>Write code → build and package as a container image → deploy to Cloud Run → get an HTTPS URL.</p></div>
+      <div class="card cheat-card"><div class="label">Cloud Run billing</div><p>Autoscales up and down. Charged only while a container handles requests. VMs charge for idle capacity.</p></div>
+    </div>
+  </section>
+
+</div>
+
+<footer>CETE 3370 — Class 3 · Fall 2026 <br><span id="footerStatus"></span></footer>
+
+<script>
+
+function lsGet(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+function onAct(n,fn){ n.setAttribute('role','button'); n.setAttribute('tabindex','0'); n.addEventListener('click',fn); n.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); fn(); } }); }
+
+function buildFlip(container, items){
+  items.forEach(e=>{
+    const card=document.createElement('div');
+    card.className='flip-card group [perspective:1200px] cursor-pointer select-none';
+    card.setAttribute('role','button'); card.setAttribute('tabindex','0'); card.setAttribute('aria-pressed','false');
+    card.innerHTML=`
+      <div class="flip-inner grid transition-transform duration-700 [transform-style:preserve-3d]" style="transform:rotateY(0deg);">
+        <div class="col-start-1 row-start-1 [backface-visibility:hidden] flex flex-col justify-center gap-2 rounded-lg border-[1.5px] border-[#16150f] bg-[#fffdf7] p-4 min-h-[150px] shadow-[3px_3px_0_rgba(22,21,15,0.08)] transition-shadow duration-300 group-hover:shadow-[5px_5px_0_rgba(22,21,15,0.12)]">
+          <div class="font-mono text-[28px] font-bold" style="color:var(--violet); opacity:.75;">0${e.n}</div>
+          <div class="text-[15px] font-bold text-[#16150f] leading-snug">${e.title}</div>
+        </div>
+        <div class="col-start-1 row-start-1 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col justify-center rounded-lg border-[1.5px] border-[#16150f] p-4 min-h-[150px] text-[13.5px] text-[#f6f3ec]" style="background:var(--violet);">
+          <p class="leading-snug">${e.back}</p>
+        </div>
+      </div>`;
+    const inner=card.querySelector('.flip-inner');
+    function toggle(){ const f=card.getAttribute('aria-pressed')==='true'; card.setAttribute('aria-pressed',String(!f)); inner.style.transform=f?'rotateY(0deg)':'rotateY(180deg)'; }
+    card.addEventListener('click',toggle);
+    card.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); toggle(); } });
+    container.appendChild(card);
+  });
+}
+
+function buildAcc(container, items){
+  items.forEach(a=>{
+    const item=document.createElement('div');
+    item.className='acc-item';
+    item.innerHTML=`<div class="acc-head"><strong>${a.title}</strong><span class="acc-plus">+</span></div>
+      <div class="acc-body">${a.html?`<div class="acc-rich">${a.html}</div>`:`<p>${a.body}</p>`}${a.chips&&a.chips.length?`<div class="chips">${a.chips.map(c=>`<span class="tag-chip">${c}</span>`).join('')}</div>`:''}</div>`;
+    onAct(item,()=>item.classList.toggle('open'));
+    container.appendChild(item);
+  });
+}
+
+function makeTabs(tabsEl, panelEl, items, renderPanel, startId, after){
+  let active=startId||items[0].id;
+  function draw(){
+    tabsEl.innerHTML='';
+    items.forEach(it=>{
+      const b=document.createElement('div');
+      b.className='loop-tab '+(it.cls||'')+(active===it.id?' active':'');
+      b.textContent=it.label;
+      onAct(b,()=>{ active=it.id; draw(); });
+      tabsEl.appendChild(b);
+    });
+    const cur=items.find(i=>i.id===active);
+    panelEl.innerHTML=renderPanel(cur);
+    if(after) after(panelEl,cur);
+  }
+  draw();
+}
+
+function makeChecklist(o){
+  let done=lsGet(o.key,{});
+  function n(){ return Object.values(done).filter(Boolean).length; }
+  function render(){
+    o.list.innerHTML='';
+    o.steps.forEach((s,i)=>{
+      const d=!!done[i];
+      const item=document.createElement('div');
+      item.className='cmd-item'+(d?' done':'');
+      item.innerHTML=`<div class="cmd-check">${d?'✓':''}</div><p>${s.t}${s.d?`<span class="cmd-detail">${s.d}</span>`:''}</p>`;
+      item.addEventListener('click',()=>{ done[i]=!d; lsSet(o.key,done); render(); if(o.onChange) o.onChange(); });
+      o.list.appendChild(item);
+    });
+    o.count.textContent=n();
+    o.bar.style.width=(n()/o.steps.length*100)+'%';
+  }
+  o.reset.addEventListener('click',()=>{ done={}; lsSet(o.key,done); render(); if(o.onChange) o.onChange(); });
+  render();
+  return {count:n,total:o.steps.length};
+}
+
+function makeQuiz(data, container, scoreEl, resetBtn, onChange){
+  const answers={};
+  function score(){ return Object.keys(answers).filter(k=>answers[k]===data[k].correct).length; }
+  function render(){
+    container.innerHTML='';
+    data.forEach((q,qi)=>{
+      const card=document.createElement('div');
+      card.className='quiz-card';
+      const answered=answers[qi]!==undefined;
+      const mine=(answered&&q.mine!==undefined)?`<div class="quiz-mine ${q.mine===q.correct?'ok':'no'}">In class you picked: ${q.opts[q.mine]} ${q.mine===q.correct?'✓':'✗'}</div>`:'';
+      card.innerHTML=`
+        <div class="quiz-q">${qi+1}. ${q.q}</div>
+        <div class="quiz-opts">
+          ${q.opts.map((o,oi)=>{
+            let cls='quiz-opt';
+            if(answered){ if(oi===q.correct) cls+=' correct'; else if(oi===answers[qi]) cls+=' wrong'; }
+            return `<button class="${cls}" data-qi="${qi}" data-oi="${oi}" ${answered?'disabled':''}>${o}</button>`;
+          }).join('')}
+        </div>
+        <div class="quiz-why ${answered?'show':''}">${q.why}${mine?'<br>'+mine:''}</div>`;
+      container.appendChild(card);
+    });
+    container.querySelectorAll('.quiz-opt').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const qi=btn.dataset.qi;
+        if(answers[qi]!==undefined) return;
+        answers[qi]=parseInt(btn.dataset.oi);
+        render(); scoreEl.textContent=score(); onChange();
+      });
+    });
+  }
+  resetBtn.addEventListener('click',()=>{ Object.keys(answers).forEach(k=>delete answers[k]); render(); scoreEl.textContent=score(); onChange(); });
+  render(); scoreEl.textContent=score();
+  return {score};
+}
+
+// ---------- Data ----------
+const spectrum = [
+  {id:"ce", label:"Compute Engine", tag:"IaaS", d:"Virtual machines with industry-leading price/performance, for general workloads that require dedicated resources for your applications.", pay:"Pay for what you allocate, even when idle", fit:"Full control of OS and machine type", eq:"AWS EC2 · Azure Virtual Machines"},
+  {id:"gke", label:"GKE", tag:"Hybrid", d:"A cluster manager and orchestration engine built on Google's container experience, for running containers on a managed Kubernetes platform. Server-based nodes with container management on top.", pay:"Between the two models", fit:"Large, complex apps that need multiple VMs with containers", eq:"Amazon EKS · Azure AKS"},
+  {id:"ae", label:"App Engine", tag:"PaaS", d:"A flexible platform for building scalable applications on a fully managed platform.", pay:"Pay for what you use", fit:"Scalable apps without managing servers", eq:"AWS Elastic Beanstalk · Azure App Service"},
+  {id:"cr", label:"Cloud Run", tag:"Serverless platform", d:"A fully managed serverless platform for developing and deploying scalable containerized applications.", pay:"Charged only while a container handles requests", fit:"Smaller-scale containerized apps you want deployed fast", eq:""},
+  {id:"cf", label:"Cloud Functions", tag:"Serverless logic", d:"A lightweight, fully managed serverless execution environment for building and connecting cloud services. It runs code based on events.", pay:"Billed only while your code is running", fit:"Small, event-driven business logic", eq:"AWS Lambda · Azure Functions"}
+];
+const cfFacts = [
+  {n:1, title:"Lightweight, event-based, async", back:"A lightweight, event-based, asynchronous compute solution."},
+  {n:2, title:"Small and single-purpose", back:"Create small, single-purpose functions that respond to cloud events without managing a server or runtime environment."},
+  {n:3, title:"Bite-sized business logic", back:"Build applications from bite-sized business logic, and connect and extend cloud services."},
+  {n:4, title:"Billed only while running", back:"You pay only while your code is actually running."},
+  {n:5, title:"Languages", back:"Write in JavaScript (Node.js), Python, or Go and execute in a managed environment on Google Cloud."},
+  {n:6, title:"How it works", back:"Cloud services emit events, the function responds, then it writes back or invokes other services and APIs."}
+];
+const evSteps = [
+  "Event emitted: a user uploads an image",
+  "Cloud Functions responds to the event",
+  "Convert format",
+  "Convert thumbnail size",
+  "Store new files",
+  "Writes back, or invokes other services and APIs"
+];
+const containers = [
+  {id:"vm", label:"Virtual machines", cls:"t-red", cap:"Every VM carries its own guest OS, so each one is heavier and slower to start. This is the IaaS way: independent OSes on shared hardware.", layers:["app","lib","os"], base:["Hypervisor","Infrastructure"]},
+  {id:"ct", label:"Containers", cls:"t-blue", cap:"Containers share the host OS kernel and only package the app with its dependencies, so they start about as fast as a process.", layers:["app","lib"], base:["Container runtime","Host OS (shared kernel)","Infrastructure"]}
+];
+const ctAcc = [
+  {title:"What a container is", body:"An invisible box around your code and its dependencies, with limited access to its own partition of the file system and hardware. It only requires a few system calls to create and starts as quickly as a process.", chips:[]},
+  {title:"What it needs", body:"Only an OS kernel that supports containers and a container runtime on each host.", chips:[]},
+  {title:"Why people use them", body:"Code becomes portable, the OS and hardware can be treated as a black box, and you get scalability and reliable deployment with enhanced security. It scales like PaaS but gives nearly the same flexibility as IaaS.", chips:[]}
+];
+const crSteps = [
+  {id:"s1", label:"1 · Write code", cls:"t-blue", t:"Write your code", d:"Any language. It's a web app or server that listens on a port and accepts requests.", x:"Source code"},
+  {id:"s2", label:"2 · Build & package", cls:"t-blue", t:"Build and package the application into a container image", d:"In the lab, Cloud Build builds the Docker image and pushes it to Artifact Registry.", x:"Container image"},
+  {id:"s3", label:"3 · Deploy", cls:"t-blue", t:"Deploy to Cloud Run", d:"Deploy the image. Cloud Run gives you an HTTPS URL on its own subdomain.", x:"HTTPS URL"}
+];
+const labSteps = [
+  {t:"Screenshot 1 (Task 1): Fancy Store preview", d:"Clone the repo, run <code>setup.sh</code>, move into the monolith folder, <code>npm start</code>, then use Web Preview on port 8080. You should see Welcome to Fancy Store. Ctrl+C to stop."},
+  {t:"Screenshot 2 (Task 2): Cloud Build execution details", d:"Cloud Build → History → click the build ID. Capture build ID, status, region and timing."},
+  {t:"Screenshot 3 (Task 3): Deployed to Cloud Run", d:"<code>gcloud run deploy monolith</code> in your lab's region, allow unauthenticated invocations, verify with <code>gcloud run services list</code>."},
+  {t:"Screenshot 4 (Task 4): New revision with concurrency 1", d:"Cloud Run → monolith service → Revisions. Capture the revision details showing concurrency = 1."},
+  {t:"Screenshot 5 (Task 5): Updated image build", d:"Edit <code>index.js</code>, rebuild, and build and push the new image with Cloud Build."},
+  {t:"Screenshot 6 (Task 6): Redeploy progress", d:"Redeploy the updated image to Cloud Run and capture the service or progress info."},
+  {t:"Screenshot 7: Fancy Store with your name", d:"Open the service URL and capture the page showing your name and the URL."},
+  {t:"Assemble and submit", d:"One Word doc, saved as a PDF, submitted as Lab Assignment 2. Send the editable Word file too."}
+];
+const labAcc = [
+  {title:"Setup: clone and run locally (Task 1)", body:"Clone the source repository (this simulates local development), run <code>setup.sh</code> to install the Node.js dependencies, <code>cd</code> into the monolith folder and <code>npm start</code>. The app listens on port 8080. Use Web Preview, port 8080, to see it. Stop the server with <code>Ctrl+C</code>.", chips:[]},
+  {title:"Artifact Registry, auth and APIs (Task 2)", body:"Create a Docker-format repository named <code>monolith-demo</code> in your lab's region (the demo used us-west1). Configure Docker authentication for that region, and enable the Cloud Build, Artifact Registry and Cloud Run APIs. If you get a \"project is not currently set up\" error, enable the APIs first and rerun the build command (<code>gcloud builds submit</code>). Use the exact commands in your lab.", chips:[]},
+  {title:"Deploy and verify (Task 3)", body:"<code>gcloud run deploy monolith</code> with the image from Artifact Registry, in your region. Allow unauthenticated invocations when asked (type y). Verify with <code>gcloud run services list</code>: the URL is HTTPS because Cloud Run already handled the certificate.", chips:[]},
+  {title:"Concurrency (Task 4)", body:"Redeploy the same image with concurrency set to 1, which creates a second revision. The default revision handled 80 requests at a time per container instance. Concurrency 1 means one request per instance. Check both in Cloud Run → monolith → Revisions.", chips:[]},
+  {title:"Edit the site with nano (Task 5)", body:"Run the lab's command that swaps in the updated index.js, then open it with <code>nano index.js</code> and add your name to the title text, using the arrow keys to move. Save with <code>Ctrl+O</code> then Enter, exit with <code>Ctrl+X</code>. Then rebuild with npm and build and push the new image. Prefer a GUI? Terminal's Open Editor lets you browse folders (the file is under the public folder) and edit there.", chips:[]},
+  {title:"Redeploy and verify (Task 6)", body:"Deploy the updated image to Cloud Run (the lab's command rolls it out with zero downtime), then click the service URL. Your name should show up on the page.", chips:[]}
+];
+const kcData = [
+  {q:"Which of these is a lightweight, managed serverless execution environment for building and connecting cloud services based on certain events?", opts:["Compute Engine","Google Kubernetes Engine","App Engine","Cloud Functions"], correct:3, mine:1, why:"Keywords: lightweight, certain events, serverless execution. That's Cloud Functions."},
+  {q:"What is a container?", opts:["A group of computers that run applications together","A standalone package containing an application and what it needs to run","A cloud network connecting multiple data centers","A physical server dedicated to one application"], correct:1, mine:1, why:"A container is a small unit that packages your app and its dependencies. The other choices describe different things."},
+  {q:"Which of these is a hybrid that conceptually sits between the two, offering the managed infrastructure of an IaaS, with the developer orientation of a PaaS offering?", opts:["Compute Engine","Google Kubernetes Engine","App Engine","Cloud Functions"], correct:1, mine:1, why:"GKE uses server-based nodes (VMs) but with managed container orchestration on top, so it sits between IaaS and PaaS."},
+  {q:"Which of these is a fully managed serverless platform for developing and deploying scalable containerized applications?", opts:["Cloud Run","Google Kubernetes Engine","App Engine","Cloud Functions"], correct:0, mine:1, why:"Cloud Run is the fully managed serverless platform for containerized apps. GKE is the hybrid where you manage clusters of nodes."},
+  {q:"What is the primary role of Kubernetes?", opts:["Storing application files as cloud objects","Building source code into programming languages","Creating physical servers in a data center","Managing and orchestrating containerized applications"], correct:3, mine:3, why:"Kubernetes is a container orchestration tool: it deploys, networks, monitors and health-checks containers."},
+  {q:"In Kubernetes, what is a cluster?", opts:["A package containing application dependencies","A single cloud function triggered by an event","A group of computers (nodes) working together to run applications","A single CPU running one container"], correct:2, mine:2, why:"A cluster is a group of nodes (VMs) working together to run applications, like the three nodes in the lab architecture."},
+  {q:"What is the correct basic Cloud Run workflow presented in the lecture?", opts:["Create a VM → install Kubernetes → deploy a cloud function","Write code → build and package it as a container image → deploy to Cloud Run","Create a cluster → create nodes → deploy a virtual machine","Write code → purchase a server → configure physical networking"], correct:1, mine:1, why:"Three steps: write code, build and package it as a container image, deploy to Cloud Run."},
+  {q:"Which statement correctly describes Cloud Run's scaling and billing model presented in the lecture?", opts:["It requires users to pay for idle server capacity at all times","It always runs a fixed number of servers and charges continuously","It cannot scale unless users manually add physical servers","It can automatically scale up and down and charges for resources used while handling requests"], correct:3, mine:3, why:"Cloud Run scales automatically and bills only while a container is handling requests."}
+];
+
+// ---------- Spectrum ----------
+makeTabs(document.getElementById('spTabs'), document.getElementById('spPanel'), spectrum.map((s,i)=>Object.assign({cls:'t-'+['red','amber','blue','good','good'][i]},s)), s=>`
+  <div class="spec-lbl"><span>Server-based · more control</span><span>More managed · serverless</span></div>
+  <div class="spec">${spectrum.map((x,i)=>`<span class="dotp ${x.id===s.id?'on':''}"></span>${i<spectrum.length-1?'<span class="seg"></span>':''}`).join('')}</div>
+  <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;"><strong style="font-size:18px;">${s.label}</strong><span class="tag-chip" style="border-color:var(--violet); color:var(--violet);">${s.tag}</span></div>
+  <p style="color:var(--sub); margin:0 0 10px;">${s.d}</p>
+  <div class="ex-row"><strong>Billing</strong><span>${s.pay}</span></div>
+  <div class="ex-row"><strong>Good fit</strong><span>${s.fit}</span></div>
+  ${s.eq?`<div class="ex-row"><strong>Elsewhere</strong><span>${s.eq}</span></div>`:''}`, 'ce');
+
+buildFlip(document.getElementById('cfGrid'), cfFacts);
+
+// ---------- Event demo ----------
+let evTimers=[];
+document.getElementById('evGo').addEventListener('click',()=>{
+  evTimers.forEach(clearTimeout); evTimers=[];
+  const box=document.getElementById('evSteps');
+  box.innerHTML=evSteps.map((s,i)=>`<div class="ev-step" id="ev${i}">${i+1}. ${s}</div>`).join('');
+  evSteps.forEach((_,i)=>{ evTimers.push(setTimeout(()=>{ const n=document.getElementById('ev'+i); if(n) n.classList.add('show'); }, 150+i*450)); });
+});
+
+// ---------- Containers ----------
+const layerLabel={app:'App',lib:'Libraries / binaries',os:'Guest OS'};
+makeTabs(document.getElementById('ctTabs'), document.getElementById('ctPanel'), containers, c=>`
+  <div class="vmgrid">${[1,2,3].map(i=>`<div class="vbox">${c.layers.map(l=>`<div class="vl ${l}">${l==='app'?'App '+i:layerLabel[l]}</div>`).join('')}</div>`).join('')}</div>
+  ${c.base.map(b=>`<div class="vl base">${b}</div>`).join('')}
+  <p style="font-size:14px; color:var(--sub); margin:10px 0 0;">${c.cap}</p>`, 'vm');
+buildAcc(document.getElementById('ctAcc'), ctAcc);
+
+// ---------- Kubernetes sandbox ----------
+let nodes=[1,1,1];
+function renderK8s(){
+  const box=document.getElementById('k8sNodes');
+  box.innerHTML='';
+  nodes.forEach((cnt,i)=>{
+    const n=document.createElement('div');
+    n.className='k8s-node';
+    n.innerHTML=`<div class="nn">node-${i+1} (VM)</div>${Array.from({length:cnt}).map((_,j)=>`<span class="k8s-c">container ${j+1}</span>`).join('')}`;
+    onAct(n,()=>{ if(nodes[i]<4){ nodes[i]++; renderK8s(); } });
+    box.appendChild(n);
+  });
+  document.getElementById('k8sSummary').textContent=`${nodes.length} nodes · ${nodes.reduce((a,b)=>a+b,0)} containers`;
+}
+document.getElementById('k8sAdd').addEventListener('click',()=>{ if(nodes.length<6){ nodes.push(1); renderK8s(); } });
+document.getElementById('k8sRemove').addEventListener('click',()=>{ if(nodes.length>1){ nodes.pop(); renderK8s(); } });
+document.getElementById('k8sReset').addEventListener('click',()=>{ nodes=[1,1,1]; renderK8s(); });
+renderK8s();
+
+// ---------- Cloud Run workflow ----------
+makeTabs(document.getElementById('crTabs'), document.getElementById('crPanel'), crSteps, s=>`
+  <strong style="font-size:18px;">${s.t}</strong>
+  <p style="color:var(--sub); margin:8px 0 10px;">${s.d}</p>
+  <span class="tag-chip">Output: ${s.x}</span>`, 's1');
+
+// ---------- Billing timeline ----------
+let slots=Array.from({length:12}).map((_,i)=>[2,3,7].includes(i));
+function renderTl(){
+  const run=document.getElementById('tlRun'), vm=document.getElementById('tlVm');
+  run.innerHTML=''; vm.innerHTML='';
+  slots.forEach((on,i)=>{
+    const s=document.createElement('div'); s.className='slot'+(on?' on':''); s.title=on?'handling a request (billable)':'idle (not billed)';
+    onAct(s,()=>{ slots[i]=!slots[i]; renderTl(); });
+    run.appendChild(s);
+    const v=document.createElement('div'); v.className='slot'; vm.appendChild(v);
+  });
+  const k=slots.filter(Boolean).length;
+  document.getElementById('tlSummary').textContent=`Cloud Run ${k}/12 · VM 12/12`;
+}
+renderTl();
+
+const slideNotes = [{"title": "Module overview, objectives and agenda (slides 1\u20135)", "html": "<ul><li><strong>Module 3: Compute.</strong> Cloud Functions, Google Kubernetes Engine, Cloud Run, then a knowledge check and the hands-on lab <em>Deploy Your Website using Cloud Run</em>.</li><li>Objectives: examine building event-driven services using Cloud Functions; identify containerizing and orchestrating applications with GKE; identify developing and deploying scalable containerized applications with Cloud Run.</li><li>Agenda: event-driven programs with Cloud Functions \u00b7 Cloud Functions: Qwik Start (console) \u00b7 containerizing and orchestrating apps with GKE \u00b7 Kubernetes Engine: Qwik Start \u00b7 managed serverless computing with Cloud Run \u00b7 lab: Cloud Run Qwik Start \u00b7 knowledge check.</li></ul>"}, {"title": "Compute services recap (slides 3, 6, 12, 22)", "html": "<p>The same five-service slide repeats throughout. In this deck App Engine is described as <em>a flexible, zero ops platform for building highly available apps</em> (Module 2 said \"a flexible platform for building scalable applications on a fully managed platform\").</p><ul><li>Compute Engine (IaaS): virtual machines with industry-leading price/performance.</li><li>App Engine (PaaS).</li><li>Google Kubernetes Engine (Hybrid): cluster manager and orchestration engine built on Google's container experience, to run containers on a managed Kubernetes platform.</li><li>Cloud Run (Serverless platform): fully managed, for scalable containerized applications.</li><li>Cloud Functions (Serverless logic): lightweight managed serverless execution environment. <em>Speaker note:</em> for triggering code to run based on some kind of event.</li><li>Compare AWS, Google Cloud and Azure services: cloud.google.com/free/docs/aws-azure-gcp-service-comparison.</li></ul>"}, {"title": "Cloud Functions (slides 7\u20139)", "html": "<ul><li><strong>Integrated cloud functions handle application events.</strong> Example: an uploaded image needs processing in a few ways: convert format, convert thumbnail size, store new files. <em>Speaker note:</em> you integrate this function into the application, but you'd otherwise have to provide compute resources.</li><li><strong>Lets your code respond to events.</strong> Lightweight, event-based, asynchronous compute solution.</li><li>Create small, single-purpose functions that respond to cloud events without the need to manage a server or a runtime environment.</li><li>Use these functions to construct applications from bite-sized business logic and to connect and extend cloud services.</li><li>Billed only while your code is running.</li><li>Write in JavaScript (Node.js), Python or Go, and execute in a managed environment on Google Cloud.</li><li><strong>How it works:</strong> cloud services emit events \u2192 Cloud Functions responds to events \u2192 it writes back and/or invokes other services and other APIs.</li></ul>"}, {"title": "IaaS to PaaS comparison (slides 13\u201314)", "html": "<ul><li><strong>Compute Engine (IaaS):</strong> servers, networking, storage. Pay for what you allocate.</li><li><strong>App Engine (PaaS):</strong> preset run-times, managed services. Pay for what you use.</li><li><strong>GKE</strong> (speaker note): a hybrid that conceptually sits between the two, offering the managed infrastructure of an IaaS with the developer orientation of a PaaS offering.</li><li>IaaS side: share compute resources using VMs by virtualizing the hardware. Customizable installation (web server, DB, middleware). Configure underlying system resources such as disk space or I/O. <strong>Slow and costly.</strong></li><li>PaaS side: access to programming services to write your code, in a self-contained environment with access to RAM, file systems and networking interfaces. Independent and rapid scaling. <em>Speaker note:</em> as demand for the app increases, the platform scales your app.</li><li><strong>Containers</strong> offer independent scalability of workloads (like PaaS) plus an abstraction layer of the OS and hardware (like IaaS).</li></ul>"}, {"title": "Containers (slides 15\u201316)", "html": "<ul><li><strong>Containers group your code and its dependencies.</strong> An invisible box around your code and its dependencies.</li><li>Has limited access to its own partition of the file system and hardware.</li><li>Only requires a few system calls to create, and starts as quickly as a process.</li><li>Only needs an OS kernel that supports containers and a container runtime on each host.</li><li><strong>Scales like PaaS, but gives nearly the same flexibility as IaaS.</strong></li><li><em>Speaker note:</em> makes code portable; the OS and hardware can be treated as a black box; scalability, reliable deployment with enhanced security.</li><li>Slide 16, VM vs container: each VM carries its own guest OS, while containers share the host OS.</li></ul>"}, {"title": "Kubernetes and GKE (slides 17\u201318)", "html": "<ul><li><strong>Kubernetes:</strong> a container orchestration tool to simplify the management of containerized environments. It can be installed on a group of your own managed servers or run as a hosted service in Google Cloud.</li><li>Kubernetes lets you: install the system on local servers \u00b7 manage container networking and data storage \u00b7 deploy apps \u00b7 monitor and manage containers and health checks.</li><li><strong>Google Kubernetes Engine (GKE)</strong> is a managed environment for deploying containerized apps. <em>Speaker note:</em> it manages containers automatically based on specifications such as CPU and memory. It's built on the open-source Kubernetes system, making it easy to orchestrate container clusters, or groups of containers.</li></ul>"}, {"title": "Practice lab: Kubernetes Engine Qwik Start (slide 20)", "html": "<p><em>Your practice, not a lab assignment.</em> During the lab you would:</p><ul><li>Create a GKE cluster.</li><li>Create a Docker container.</li><li>Deploy the container to GKE.</li><li>Expose the container via a service.</li><li>Scale the container to multiple replicas.</li><li>Modify the website.</li><li>Update the website with zero downtime.</li></ul>"}, {"title": "Cloud Run (slides 23\u201326)", "html": "<ul><li><strong>Cloud Run is managed serverless computing.</strong> A managed compute platform that can run containers. Serverless, removing the need for infrastructure management. Built on Knative, an open API and runtime environment built on Kubernetes. Can automatically scale up and down, charging only for the resources used.</li><li><em>Speaker note:</em> focus on developing applications. It gives you freedom to move your workloads across different environments and platforms.</li><li><strong>Three-step workflow:</strong> (1) write your code, a server that listens on a port and accepts requests; (2) build and package the application into a container image; (3) deploy to Cloud Run and receive an HTTPS URL. <em>Speaker note:</em> serverless means focusing on building your application, not building and maintaining the infrastructure.</li><li><strong>HTTPS handled for you:</strong> client \u2192 HTTPS \u2192 Cloud Run proxy \u2192 container. By default the app is exposed on a unique subdomain of the global <code>*.run.app</code> domain; you can use your own custom domain. Cloud Run generates a valid SSL certificate, configures SSL termination with secure settings, and handles incoming requests, decrypting them and forwarding them to your app.</li><li><strong>You're only charged when your container handles requests.</strong> The slide graph splits container lifespan (startup, handling requests, shutdown) into billable (handling requests) and non-billable time. <em>Speaker note:</em> most other compute products, such as Compute Engine, charge for servers as long as they're running, even if you're not using them, so you're often paying for idle server capacity.</li></ul>"}, {"title": "Lab: Cloud Run Qwik Start (slide 28)", "html": "<p>During this lab you'll:</p><ul><li>Create a Docker container from your application.</li><li>Deploy the container to Cloud Run.</li><li>Modify the website.</li><li>Roll out a new version with zero downtime.</li></ul>"}];
+const scData = [{"q": "Which languages does the Cloud Functions slide list?", "opts": ["Java, C++ and Rust", "JavaScript (Node.js), Python and Go", "Only JavaScript", "Ruby, PHP and .NET"], "correct": 1, "why": "Write in JavaScript (Node.js), Python or Go, and execute in a managed environment on Google Cloud."}, {"q": "When is Cloud Functions billed?", "opts": ["Per hour the project exists", "Per allocated GB of disk", "Only while your code is running", "Once per deployment"], "correct": 2, "why": "Billed only while your code is running."}, {"q": "On the IaaS-to-PaaS slide, how are Compute Engine and App Engine billed?", "opts": ["Both: pay for what you allocate", "Compute Engine: allocate. App Engine: use", "Compute Engine: use. App Engine: allocate", "Both: flat monthly fee"], "correct": 1, "why": "Compute Engine (IaaS): pay for what you allocate. App Engine (PaaS): pay for what you use."}, {"q": "What does a container host need, according to the slides?", "opts": ["A full guest OS per container", "An OS kernel that supports containers and a container runtime", "A dedicated physical server", "A hypervisor for each container"], "correct": 1, "why": "Only an OS kernel that supports containers and a container runtime, on each host."}, {"q": "Complete the slide: containers scale like PaaS but give nearly the same flexibility as ___.", "opts": ["SaaS", "IaaS", "Cloud Functions", "Memcache"], "correct": 1, "why": "It scales like PaaS, but gives nearly the same flexibility as IaaS."}, {"q": "Cloud Run is built on which open API and runtime environment?", "opts": ["Hadoop", "Knative", "Terraform", "Memcache"], "correct": 1, "why": "Knative, an open API and runtime environment built on Kubernetes."}, {"q": "By default, where is a Cloud Run app exposed?", "opts": ["On a unique subdomain of the global *.run.app domain", "At a raw IP address with no HTTPS", "On your own domain only", "Behind a Compute Engine VM"], "correct": 0, "why": "A unique *.run.app subdomain by default, with HTTPS and a valid SSL certificate. A custom domain is optional."}, {"q": "What do multiple containers on one host share in the VM-vs-container slide?", "opts": ["Each other's application code", "The host operating system", "A single CPU only", "Nothing at all"], "correct": 1, "why": "Containers share the host OS, while each VM carries its own guest OS. That's why containers start about as fast as a process."}];
+buildAcc(document.getElementById('slideNotes'), slideNotes);
+const sc = makeQuiz(scData, document.getElementById('sc_container'), document.getElementById('sc_score'), document.getElementById('sc_reset'), ()=>updateFooter());
+// ---------- Checklist, accordion, quiz ----------
+buildAcc(document.getElementById('labAcc'), labAcc);
+const lab = makeChecklist({list:document.getElementById('lab_list'), count:document.getElementById('lab_count'), bar:document.getElementById('lab_bar'), reset:document.getElementById('lab_reset'), steps:labSteps, key:'cloud-w3-lab', onChange:()=>updateFooter()});
+const kc = makeQuiz(kcData, document.getElementById('kc_container'), document.getElementById('kc_score'), document.getElementById('kc_reset'), ()=>updateFooter());
+
+function updateFooter(){
+  document.getElementById('footerStatus').textContent=`${lab.count()}/${lab.total} lab steps · ${kc.score()}/${kcData.length} on the knowledge check · ${sc.score()}/${scData.length} on the slide check`;
+}
+updateFooter();
+</script>
+</body>
+</html>

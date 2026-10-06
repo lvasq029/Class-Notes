@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CETE 3370 · Class 01 · Cloud Infrastructure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --bg:#f6f3ec;
+    --ink:#16150f;
+    --sub:#454236;
+    --muted:#6a6656;
+    --line:#cfc9b6;
+    --card:#fffdf7;
+    --red:oklch(0.53 0.19 25);
+    --red-soft:oklch(0.94 0.045 25);
+    --blue:oklch(0.46 0.14 255);
+    --blue-soft:oklch(0.93 0.03 255);
+    --violet:oklch(0.48 0.15 300);
+    --violet-soft:oklch(0.94 0.035 300);
+    --good:oklch(0.58 0.14 150);
+    --good-soft:oklch(0.94 0.05 150);
+    --bad:oklch(0.55 0.18 25);
+    --bad-soft:oklch(0.94 0.06 25);
+    --amber:oklch(0.72 0.15 75);
+    --amber-soft:oklch(0.95 0.05 75);
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'Space Grotesk', Helvetica, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.5; padding-bottom:60px;}
+  .wrap{max-width:920px; margin:0 auto; padding:0 20px;}
+  header.hero{
+    border-bottom:3px solid var(--ink);
+    padding:34px 20px 26px;
+    background:repeating-linear-gradient(135deg, transparent, transparent 26px, rgba(22,21,15,0.03) 26px, rgba(22,21,15,0.03) 27px);
+  }
+  .kicker{font-family:var(--mono); font-size:12.5px; letter-spacing:.06em; color:var(--sub); text-transform:uppercase; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .kicker .dot{color:var(--muted);}
+  h1.title{font-size:clamp(28px,5vw,44px); line-height:1.05; margin:10px 0 6px; font-weight:700; letter-spacing:-0.01em;}
+  .subtitle{color:var(--sub); font-size:16px; max-width:620px;}
+  .prompt{font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:16px;}
+  .backlink{font-family:var(--mono); font-size:12px; color:var(--muted); text-decoration:none; display:inline-block; margin-bottom:12px;}
+  .backlink:hover{color:var(--violet);}
+
+  .badge{display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:3px 10px; border:1.5px solid var(--ink); border-radius:3px; margin-bottom:10px;}
+  .badge.risk{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .badge.red{background:var(--red-soft); border-color:var(--red); color:var(--red);}
+  .badge.blue{background:var(--blue-soft); border-color:var(--blue); color:var(--blue);}
+  .badge.plain{background:var(--card);}
+
+  section{padding:36px 0; border-bottom:1.5px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2.h{font-size:26px; font-weight:700; margin:0 0 6px; letter-spacing:-0.01em;}
+  .lede{color:var(--sub); margin-bottom:20px; max-width:640px;}
+
+  .card{background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:18px 20px; box-shadow:3px 3px 0 rgba(22,21,15,0.08);}
+  ul.tight{margin:8px 0; padding-left:20px;}
+  ul.tight li{margin-bottom:5px;}
+
+  /* Housekeeping */
+  .house-grid{display:grid; gap:12px;}
+  .house-item{background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:14px 16px; display:flex; gap:14px; align-items:flex-start;}
+  .house-item .tag{font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.05em; background:var(--amber-soft); border:1.5px solid var(--ink); border-radius:5px; padding:2px 8px; white-space:nowrap; flex-shrink:0; margin-top:2px;}
+  .house-item a{color:var(--blue); word-break:break-all;}
+
+  /* NIST quote */
+  .nist{border-left:5px solid var(--violet);}
+  .nist blockquote{margin:0 0 12px; font-size:15.5px; color:var(--ink);}
+  .nist mark{background:var(--amber-soft); border-bottom:2px solid var(--amber); padding:0 2px; color:inherit;}
+  .nist-counts{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-top:14px;}
+  .nist-count{border:1.5px solid var(--line); border-radius:7px; background:var(--bg); padding:10px 12px; text-align:center;}
+  .nist-count b{display:block; font-family:var(--mono); font-size:28px; color:var(--violet);}
+  .nist-count span{font-size:12.5px; color:var(--sub);}
+
+  /* Tabs */
+  .loop-tabs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;}
+  .loop-tab{font-family:var(--mono); font-size:12.5px; font-weight:600; border:1.5px solid var(--ink); border-radius:6px; background:var(--card); padding:8px 14px; cursor:pointer; transition:all .15s;}
+  .loop-tab.active{background:var(--violet); color:var(--bg); border-color:var(--violet);}
+  .loop-tab:hover:not(.active){background:var(--violet-soft);}
+  .loop-tab.t-red.active{background:var(--red); border-color:var(--red);}
+  .loop-tab.t-blue.active{background:var(--blue); border-color:var(--blue);}
+  .loop-tab.t-good.active{background:var(--good); border-color:var(--good);}
+  .loop-tab.t-amber.active{background:var(--amber); border-color:var(--amber); color:var(--ink);}
+  .tag-chip{font-family:var(--mono); font-size:11.5px; padding:4px 10px; border:1.5px solid var(--line); border-radius:999px; color:var(--sub); background:var(--bg);}
+
+  /* Responsibility stack */
+  .stack{display:flex; flex-direction:column; gap:4px; margin:14px 0;}
+  .layer{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 12px; border:1.5px solid var(--ink); border-radius:5px; font-size:13.5px; font-weight:600; transition:background .2s;}
+  .layer small{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; font-weight:700;}
+  .layer.you{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .layer.them{background:var(--bg); border-color:var(--line); color:var(--muted);}
+  .ex-row{display:flex; justify-content:space-between; gap:12px; font-size:14px; padding:8px 0; border-top:1px dashed var(--line);}
+  .ex-row strong{color:var(--blue); flex-shrink:0;}
+  .ex-row span{text-align:right;}
+
+  /* Accordion */
+  .acc-item{border:1.5px solid var(--ink); border-radius:8px; background:var(--card); padding:14px 16px; cursor:pointer; margin-bottom:10px; transition:box-shadow .15s;}
+  .acc-item:hover{box-shadow:3px 3px 0 rgba(22,21,15,0.08);}
+  .acc-head{display:flex; justify-content:space-between; align-items:center; gap:10px;}
+  .acc-head strong{font-size:15.5px;}
+  .acc-plus{font-family:var(--mono); font-size:18px; color:var(--violet); flex-shrink:0; transition:transform .2s;}
+  .acc-item.open .acc-plus{transform:rotate(45deg);}
+  .acc-body{max-height:0; overflow:hidden; transition:max-height .25s ease;}
+  .acc-item.open .acc-body{max-height:320px;}
+  .acc-body p{font-size:14px; color:var(--sub); margin:10px 0 0; padding-top:10px; border-top:1px dashed var(--line);}
+  .acc-body .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;}
+
+  /* Stats */
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px;}
+  .stat .big{font-family:var(--mono); font-size:34px; font-weight:700; color:var(--blue); line-height:1.1;}
+  .stat .lbl{font-size:13px; color:var(--sub); margin-top:4px;}
+
+  /* Zone demo */
+  .zone-wrap{display:grid; gap:12px;}
+  .region-box{border:1.5px dashed var(--ink); border-radius:10px; padding:14px; background:var(--card);}
+  .region-name{font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.05em; margin-bottom:10px;}
+  .zones{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px;}
+  .zone{border:1.5px solid var(--ink); border-radius:8px; padding:12px; background:var(--good-soft); cursor:pointer; transition:all .2s; user-select:none;}
+  .zone:hover{box-shadow:3px 3px 0 rgba(22,21,15,0.1);}
+  .zone .zn{font-family:var(--mono); font-size:12.5px; font-weight:700;}
+  .zone .vm{margin-top:8px; font-size:13px; border:1.5px solid var(--good); background:var(--bg); border-radius:5px; padding:6px 8px;}
+  .zone.down{background:var(--bad-soft); border-color:var(--bad); opacity:.85;}
+  .zone.down .vm{border-color:var(--bad); text-decoration:line-through; color:var(--muted);}
+  .zone-status{margin-top:12px; font-size:14px; padding:10px 14px; border-radius:6px; border:1.5px solid var(--ink); background:var(--good-soft); font-weight:600;}
+  .zone-status.warn{background:var(--amber-soft);}
+  .zone-status.bad{background:var(--bad-soft);}
+
+  /* Checklist */
+  .cmd-status{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:14px 18px; margin-bottom:14px;}
+  .cmd-count{font-family:var(--mono); font-size:24px; color:var(--violet); font-weight:700;}
+  .cmd-bar-track{flex:1; min-width:140px; height:8px; background:var(--line); border-radius:999px; overflow:hidden;}
+  .cmd-bar-fill{height:100%; width:0%; background:var(--violet); border-radius:999px; transition:width .35s;}
+  .ghost-btn{font-family:var(--mono); font-size:11.5px; letter-spacing:.05em; text-transform:uppercase; padding:7px 13px; background:var(--bg); border:1.5px solid var(--ink); border-radius:999px; color:var(--ink); cursor:pointer;}
+  .ghost-btn:hover{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .cmd-item{display:flex; align-items:flex-start; gap:12px; padding:12px 14px; background:var(--card); border:1.5px solid var(--line); border-radius:7px; cursor:pointer; transition:opacity .2s, border-color .2s; margin-bottom:8px;}
+  .cmd-item.done{opacity:0.55; border-color:var(--good);}
+  .cmd-check{flex-shrink:0; width:22px; height:22px; border-radius:5px; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:13px; color:var(--bg); margin-top:1px; background:var(--bg);}
+  .cmd-item.done .cmd-check{background:var(--good); border-color:var(--good);}
+  .cmd-item p{margin:0; font-size:14.5px;}
+  .cmd-callout{margin-top:14px; background:var(--amber-soft); border:1.5px solid var(--ink); border-left:4px solid var(--amber); border-radius:6px; padding:14px 16px; font-size:13.5px; line-height:1.5; color:var(--sub);}
+
+  /* Cheat sheet */
+  .cheat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px;}
+  .cheat-card .label{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--violet); margin-bottom:6px;}
+  .cheat-card p{font-size:13.5px; line-height:1.45; margin:0; color:var(--sub);}
+
+  /* Quiz */
+  .quiz-card{border:1.5px solid var(--ink); border-radius:8px; padding:16px; background:var(--card); margin-bottom:14px;}
+  .quiz-q{font-weight:600; margin-bottom:10px;}
+  .quiz-opts{display:flex; flex-direction:column; gap:8px;}
+  .quiz-opt{text-align:left; padding:9px 12px; border:1.5px solid var(--line); border-radius:6px; background:var(--bg); cursor:pointer; font-family:var(--sans); font-size:14px; transition:all .15s; color:var(--ink);}
+  .quiz-opt:hover:not(:disabled){border-color:var(--violet);}
+  .quiz-opt.correct{background:var(--good-soft); border-color:var(--good); font-weight:700;}
+  .quiz-opt.wrong{background:var(--bad-soft); border-color:var(--bad);}
+  .quiz-why{display:none; margin-top:10px; font-size:13px; color:var(--sub); border-top:1px dashed var(--line); padding-top:10px;}
+  .quiz-why.show{display:block;}
+  .quizbar{position:sticky; bottom:0; background:var(--ink); color:var(--bg); border-radius:8px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); margin-top:6px;}
+  .quizbar button{font-family:var(--mono); background:var(--bg); color:var(--ink); border:none; border-radius:5px; padding:7px 14px; cursor:pointer; font-weight:700;}
+
+  .quiz-mine{font-family:var(--mono); font-size:11.5px; display:inline-block; margin-top:10px; padding:2px 10px; border-radius:999px; border:1.5px solid;}
+  .quiz-mine.ok{border-color:var(--good); background:var(--good-soft);}
+  .quiz-mine.no{border-color:var(--bad); background:var(--bad-soft);}
+  .pair-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-top:16px;}
+  .pair-card .label{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--red); margin-bottom:6px;}
+  .pair-card p{font-size:13.5px; margin:4px 0; color:var(--sub);}
+
+  footer{text-align:center; font-family:var(--mono); font-size:12px; color:var(--muted); padding:30px 20px 0;}
+  #footerStatus{color:var(--violet); font-weight:600;}
+
+  .flip-inner{transition-timing-function:cubic-bezier(.34,1.56,.64,1);}
+  .flip-card:active .flip-inner{transform:scale(0.97) !important;}
+
+  code{font-family:var(--mono); font-size:12.5px; background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:1px 5px; color:var(--ink);}
+  .scroll-x{overflow-x:auto;}
+  table.cmp{width:100%; border-collapse:collapse; font-size:14px; background:var(--card); border:1.5px solid var(--ink);}
+  .cmp th,.cmp td{padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top;}
+  .cmp th{font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; background:var(--violet-soft); color:var(--violet);}
+  .cmp td:first-child{font-weight:700;}
+  .cmp tr:last-child td{border-bottom:none;}
+  .acc-item.open .acc-body{max-height:900px;}
+  .acc-rich{font-size:14px; color:var(--sub); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);}
+  .acc-rich p{margin:0 0 8px;}
+  .acc-rich ul{margin:6px 0 8px; padding-left:20px;}
+  .acc-rich li{margin-bottom:5px;}
+  .acc-rich blockquote{margin:0 0 8px; padding-left:12px; border-left:3px solid var(--violet);}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <a class="backlink" href="index.html">← Class Notes index</a>
+    <div class="kicker">CETE 3370 <span class="dot">·</span> CLOUD COMPUTING <span class="dot">·</span> CLASS 01 <span class="dot">·</span> Module 1</div>
+    <h1 class="title">Cloud Infrastructure</h1>
+    <p class="subtitle">From August 25 — the NIST definition of cloud computing, its five essential characteristics, IaaS/PaaS/SaaS, and how Google Cloud's layers, network, regions and zones fit together.</p>
+    <div class="prompt">lvasq@tamusa:~/cloud-computing#</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ADMIN -->
+  <section>
+    <span class="badge plain">📌 Admin</span>
+    <h2 class="h">Before Next Class</h2>
+    <div class="house-grid">
+      <div class="house-item"><span class="tag">ACCESS</span><div>Google Cloud Platform access with credits comes through Google Cloud Skills Boost: <a href="https://www.cloudskillsboost.google/" target="_blank" rel="noopener">cloudskillsboost.google</a></div></div>
+      <div class="house-item"><span class="tag">ACCOUNT</span><div>Create a Qwiklabs account with your <strong>student email</strong> (<a href="https://www.skills.google/" target="_blank" rel="noopener">skills.google</a>), then log into the lab with that same email.</div></div>
+      <div class="house-item"><span class="tag">LAB</span><div>Complete "Getting Started with Google Cloud Shell and GCP Essentials."</div></div>
+      <div class="house-item"><span class="tag">SUBMIT</span><div>Submit a screenshot of the completion showing your answers to <strong>Task 6: Testing your understanding</strong> and your student username.</div></div>
+    </div>
+  </section>
+
+  <!-- NIST -->
+  <section>
+    <span class="badge risk">Definition</span>
+    <h2 class="h">So, What's the Cloud Anyway?</h2>
+    <p class="lede">The class anchors on the NIST definition (SP 800-145). Know it cold.</p>
+    <div class="card nist">
+      <blockquote>Cloud computing is a model for enabling <mark>ubiquitous, convenient, on-demand network access</mark> to a <mark>shared pool of configurable computing resources</mark> (e.g., networks, servers, storage, applications, and services) that can be <mark>rapidly provisioned and released</mark> with <mark>minimal management effort</mark> or service provider interaction.</blockquote>
+      <p style="margin:0; color:var(--sub); font-size:14px;">The model is composed of:</p>
+      <div class="nist-counts">
+        <div class="nist-count"><b>5</b><span>essential characteristics</span></div>
+        <div class="nist-count"><b>3</b><span>service models</span></div>
+        <div class="nist-count"><b>4</b><span>deployment models</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FIVE CHARACTERISTICS -->
+  <section>
+    <span class="badge red">Essential Characteristics</span>
+    <h2 class="h">Five Equally Important Traits</h2>
+    <p class="lede">Cloud computing is a way of using IT that has all five. Click a card to flip it.</p>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" id="charGrid"></div>
+  </section>
+
+  <!-- SERVICE MODELS -->
+  <section>
+    <span class="badge blue">Service Models</span>
+    <h2 class="h">IaaS, PaaS, SaaS</h2>
+    <p class="lede">The difference is how much of the stack you manage. Pick a model and see which layers are yours.</p>
+    <div class="loop-tabs" id="svcTabs"></div>
+    <div class="card" id="svcPanel"></div>
+  </section>
+
+  <!-- GOOGLE CLOUD LAYERS -->
+  <section>
+    <span class="badge risk">Google Cloud Architecture</span>
+    <h2 class="h">The Google Cloud Infrastructure</h2>
+    <p class="lede">Three layers sit on a networking and security foundation. Click a row to expand it.</p>
+    <div id="layerList"></div>
+  </section>
+
+  <!-- NETWORK STATS -->
+  <section>
+    <span class="badge blue">The Network</span>
+    <h2 class="h">The Largest Network of Its Kind</h2>
+    <p class="lede">Google's network is part of the foundation under all of Google's infrastructure and applications. Figures are from the slides.</p>
+    <div class="stat-grid">
+      <div class="card stat"><div class="big">40%</div><div class="lbl">of the world's internet traffic per day (publicly available estimates: "as much as")</div></div>
+      <div class="card stat"><div class="big">43</div><div class="lbl">regions</div></div>
+      <div class="card stat"><div class="big">130</div><div class="lbl">zones</div></div>
+      <div class="card stat"><div class="big">90+</div><div class="lbl">internet exchanges</div></div>
+      <div class="card stat"><div class="big">110+</div><div class="lbl">points of presence (PoPs) worldwide</div></div>
+    </div>
+  </section>
+
+  <!-- REGIONS & ZONES -->
+  <section>
+    <span class="badge red">Locations</span>
+    <h2 class="h">Locations, Regions &amp; Zones</h2>
+    <p class="lede">A geographic location contains regions; a region contains zones (usually 3, with the odd exception of 4). Zones are where your resources actually run. Click a zone to knock it out.</p>
+    <div class="zone-wrap">
+      <div class="region-box">
+        <div class="region-name">REGION: europe-west2 (London)</div>
+        <div class="zones" id="zones"></div>
+        <div class="zone-status" id="zoneStatus"></div>
+      </div>
+      <div class="card" style="font-size:14px; color:var(--sub);">
+        <strong style="color:var(--ink);">Why it matters:</strong> spreading resources across zones gives <em>resource redundancy</em>. Some services also run <strong>multi-region</strong> (e.g., across London and Belgium within Europe).
+      </div>
+    </div>
+  </section>
+
+  <!-- LAB CHECKLIST -->
+  <section>
+    <span class="badge risk">Hands-on Lab</span>
+    <h2 class="h">Cloud Shell &amp; GCP Essentials</h2>
+    <p class="lede">Track your progress on the Module 1 lab.</p>
+    <div class="cmd-status">
+      <div style="display:flex; align-items:baseline; gap:8px;">
+        <span class="cmd-count" id="cmdCount">0</span>
+        <span style="font-family:var(--mono); font-size:12px; color:var(--sub);">/ 4 done</span>
+      </div>
+      <div class="cmd-bar-track"><div class="cmd-bar-fill" id="cmdBar"></div></div>
+      <button class="ghost-btn" id="cmdReset">Reset</button>
+    </div>
+    <div id="cmdList"></div>
+    <div class="cmd-callout">⚠️ <strong>Don't forget:</strong> the screenshot has to show both your Task 6 answers and your student username.</div>
+  </section>
+
+  <!-- FROM THE SLIDES -->
+  <section>
+    <span class="badge risk">From the Slides</span>
+    <h2 class="h">Slide-by-Slide Notes</h2>
+    <p class="lede">Everything on the Module 1 deck, grouped the way the agenda runs, including the speaker notes. Click a row to expand it.</p>
+    <div id="slideNotes"></div>
+  </section>
+
+  <section>
+    <span class="badge blue">Vocabulary</span>
+    <h2 class="h">Terms to Know</h2>
+    <p class="lede">Worded from the slides wherever possible.</p>
+    <div class="scroll-x"><table class="cmp">
+      <tr><th>Term</th><th>Meaning</th></tr>
+      <tr><td>NIST</td><td style="font-weight:400;">National Institute of Standards and Technology, the source of the cloud definition (SP 800-145).</td></tr>
+      <tr><td>Cloud computing</td><td style="font-weight:400;">A model for on-demand network access to a shared pool of configurable computing resources that can be rapidly provisioned and released with minimal management effort.</td></tr>
+      <tr><td>On-demand self-service</td><td style="font-weight:400;">Resources on demand, automatically, with no human needed at the provider.</td></tr>
+      <tr><td>Broad network access</td><td style="font-weight:400;">Resources reached over the internet, from anywhere.</td></tr>
+      <tr><td>Resource pooling</td><td style="font-weight:400;">The provider allocates resources from a shared pool; it buys in bulk and location doesn't matter to you.</td></tr>
+      <tr><td>Rapid elasticity</td><td style="font-weight:400;">Resources scale up or down quickly as needed.</td></tr>
+      <tr><td>Measured service</td><td style="font-weight:400;">Pay only for what you use or reserve. Stop using, stop paying.</td></tr>
+      <tr><td>Deployment models</td><td style="font-weight:400;">NIST says there are four. The slides give only the number.</td></tr>
+      <tr><td>IaaS</td><td style="font-weight:400;">Infrastructure as a Service: you provision fundamental resources and control the OS, storage and deployed apps. Pay for what you allocate.</td></tr>
+      <tr><td>PaaS</td><td style="font-weight:400;">Platform as a Service: you deploy apps onto provider-supported languages, libraries and tools. Pay for what you use.</td></tr>
+      <tr><td>SaaS</td><td style="font-weight:400;">Software as a Service: you use the provider's application over the internet.</td></tr>
+      <tr><td>Thin client</td><td style="font-weight:400;">A lightweight interface, such as a web browser, used to reach a SaaS app.</td></tr>
+      <tr><td>Location / region / zone</td><td style="font-weight:400;">Locations contain regions; regions contain multiple zones; zones are where resources are deployed.</td></tr>
+      <tr><td>Multi-region</td><td style="font-weight:400;">A service that runs across geographic locations, e.g., London and Belgium.</td></tr>
+      <tr><td>Resource redundancy</td><td style="font-weight:400;">Running resources across several zones so one zone failing doesn't take you down.</td></tr>
+      <tr><td>Internet exchange</td><td style="font-weight:400;">A point where Google's network meets the public internet (90+).</td></tr>
+      <tr><td>Point of presence (PoP)</td><td style="font-weight:400;">Another interconnection point with the public internet (110+ worldwide).</td></tr>
+      <tr><td>Cloud Shell</td><td style="font-weight:400;">The browser-based command line used in the labs (gcloud runs here).</td></tr>
+    </table></div>
+  </section>
+
+  <!-- KNOWLEDGE CHECK -->
+  <section>
+    <span class="badge red">Knowledge Check</span>
+    <h2 class="h">Module 1 Knowledge Check, Replayed</h2>
+    <p class="lede">The 8 questions from class (you got 4 of 8 on the original). Each answer shows what you picked in class, so you can see where the mix-ups were. Wrong-answer choices that weren't in your notes are my reconstruction.</p>
+    <div id="kcContainer"></div>
+    <div id="kcBar" class="quizbar">
+      <span><span id="kcScore">0</span>/8 correct</span>
+      <button id="kcReset">Reset</button>
+    </div>
+    <div class="pair-grid">
+      <div class="card pair-card"><div class="label">Mix-up #1</div><p><strong>On-demand self-service</strong> → no human/admin involved.</p><p><strong>Broad network access</strong> → reachable over the internet, from anywhere.</p></div>
+      <div class="card pair-card"><div class="label">Mix-up #2</div><p><strong>Resource pooling</strong> → provider shares one pool across customers.</p><p><strong>Rapid elasticity</strong> → scales up and down with demand.</p></div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section>
+    <span class="badge risk">Quick Check</span>
+    <h2 class="h">Test Yourself</h2>
+    <p class="lede">Five questions on the Module 1 material.</p>
+    <div id="quizContainer"></div>
+    <div id="quizBar" class="quizbar">
+      <span><span id="quizScore">0</span>/5 correct</span>
+      <button id="quizReset">Reset</button>
+    </div>
+  </section>
+
+  <!-- SLIDE CHECK -->
+  <section>
+    <span class="badge risk">Slide Check</span>
+    <h2 class="h">Questions From the Slides</h2>
+    <p class="lede">8 extra questions written from the deck itself, since slide wording is what tends to show up on exams. These are mine, not your instructor's.</p>
+    <div id="sc_container"></div>
+    <div id="sc_bar" class="quizbar">
+      <span><span id="sc_score">0</span>/8 correct</span>
+      <button id="sc_reset">Reset</button>
+    </div>
+  </section>
+
+  <!-- CHEAT SHEET -->
+  <section>
+    <span class="badge plain">Cheat Sheet</span>
+    <h2 class="h">The Five-Minute-Before-The-Exam Version</h2>
+    <div class="cheat-grid">
+      <div class="card cheat-card"><div class="label">NIST in one line</div><p>Shared pool of configurable resources, on-demand over the network, rapidly provisioned and released with minimal effort.</p></div>
+      <div class="card cheat-card"><div class="label">5 characteristics</div><p>On-demand self-service · Broad network access · Resource pooling · Rapid elasticity · Measured service.</p></div>
+      <div class="card cheat-card"><div class="label">Service models</div><p>IaaS = you run OS + apps (EC2, Compute Engine, VMs). PaaS = you run code (Elastic Beanstalk, App Engine, App Services). SaaS = you just use it (Gmail, Zoom).</p></div>
+      <div class="card cheat-card"><div class="label">Payment</div><p>IaaS: pay for what you <em>allocate</em>. PaaS: pay for what you <em>use</em>.</p></div>
+      <div class="card cheat-card"><div class="label">Google layers</div><p>Compute · Storage · Big Data &amp; ML, all on Networking &amp; Security.</p></div>
+      <div class="card cheat-card"><div class="label">Geography</div><p>Location → Region → Zones. Resources deploy in zones; spread across zones for redundancy. 43 regions, 130 zones.</p></div>
+    </div>
+  </section>
+
+</div>
+
+<footer>CETE 3370 — Class 1 · Fall 2026 <br><span id="footerStatus">0/4 lab steps · 0/5 on the check · 0/8 on the knowledge check</span></footer>
+
+<script>
+// ---------- Safe storage ----------
+function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
+function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+
+// ---------- Data ----------
+const chars = [
+  {n:1, title:"On-demand self-service", back:"Customers get computing resources on demand and self-service — server time, network, storage — automatically, without needing a human at the provider for each request."},
+  {n:2, title:"Broad network access", back:"Customers reach those resources over the internet, from anywhere."},
+  {n:3, title:"Resource pooling", back:"The provider allocates resources to users out of a shared pool. That lets the provider buy in bulk, and customers don't need to know or care where the hardware physically is."},
+  {n:4, title:"Rapid elasticity", back:"Resources can increase or decrease as needed. Need more? Get more, quickly. Need less? Scale back."},
+  {n:5, title:"Measured service", back:"Customers pay only for what they use, or reserve as they go. If they stop using resources, they stop paying."}
+];
+
+const services = [
+  {id:"iaas", cls:"t-red", label:"IaaS", title:"Infrastructure as a Service",
+   desc:"The consumer provisions processing, storage, networks and other fundamental resources, and can deploy and run arbitrary software — including operating systems and applications. Organized like a physical data center, with great control over the OS and everything above it.",
+   control:"You control the OS, storage, and deployed apps, and possibly limited networking (e.g., host firewalls). You don't control the underlying infrastructure.",
+   you:[true,true,true,false,false], pay:"Pay for what you allocate",
+   ex:[["AWS","Elastic Compute Cloud (EC2)"],["Google Cloud","Compute Engine"],["Azure","Virtual Machines"]]},
+  {id:"paas", cls:"t-blue", label:"PaaS", title:"Platform as a Service",
+   desc:"The consumer deploys their own (or acquired) applications onto the cloud, built with languages, libraries, services and tools the provider supports. Code binds to libraries that provide access to the infrastructure, so more effort goes into application logic.",
+   control:"You control the deployed applications and possibly app-hosting configuration. You don't manage network, servers, OS, or storage.",
+   you:[true,false,false,false,false], pay:"Pay for what you use",
+   ex:[["AWS","Elastic Beanstalk"],["Google Cloud","App Engine"],["Azure","App Services"]]},
+  {id:"saas", cls:"t-good", label:"SaaS", title:"Software as a Service",
+   desc:"The consumer uses the provider's applications running on a cloud. They aren't installed on your local computer — they run in the cloud as a service and are consumed directly over the internet, through a thin client such as a web browser or a program interface.",
+   control:"You manage nothing underneath — not network, servers, OS, storage, or even individual app capabilities, apart from limited user-specific settings.",
+   you:[false,false,false,false,false], pay:"Consumed directly by end users",
+   ex:[["Google","Gmail, Google Drive"],["Collab","Dropbox, Slack"],["Meetings","WebEx, Zoom"]]}
+];
+const layerNames = ["Application","Runtime & libraries","Operating system","Virtualization & servers","Storage & networking"];
+
+const gcpLayers = [
+  {title:"Networking & Security (the foundation)", body:"Everything else is built on top of this base layer. Google's global network is part of the foundation that supports all of Google's infrastructure and applications.", chips:[]},
+  {title:"Compute", body:"Services for running workloads, from full virtual machines down to individual functions.", chips:["Compute Engine","Kubernetes Engine","App Engine","Cloud Functions","Cloud Run"]},
+  {title:"Storage", body:"Storage services, including relational and NoSQL databases.", chips:["Cloud Storage","Cloud Bigtable","Cloud Spanner","Firestore"]},
+  {title:"Big Data & ML products", body:"A robust big data and machine learning product line.", chips:["BigQuery","Dataproc","Dataflow","Pub/Sub","Looker","AutoML","Vertex AI"]}
+];
+
+const zoneNames = ["europe-west2-a","europe-west2-b","europe-west2-c"];
+
+const labSteps = [
+  "Create a Qwiklabs account with your student email.",
+  "Log into the lab with that same email.",
+  "Complete \"Getting Started with Google Cloud Shell and GCP Essentials.\"",
+  "Screenshot the completion showing your Task 6 answers and student username, then submit."
+];
+
+const quizData = [
+  {q:"Which essential characteristic means customers pay only for what they use?", opts:["Resource pooling","Rapid elasticity","Measured service","Broad network access"], correct:2, why:"Measured service: pay for what you use or reserve as you go. Stop using resources, stop paying."},
+  {q:"In IaaS, which of these does the consumer manage?", opts:["The physical servers","The operating system","The data center network","Nothing — the provider runs it all"], correct:1, why:"IaaS gives control over operating systems, storage and deployed applications; the underlying infrastructure stays with the provider."},
+  {q:"Which pairing is correct for PaaS?", opts:["Google Cloud — Compute Engine","AWS — Elastic Compute Cloud (EC2)","Google Cloud — App Engine","Azure — Virtual Machines"], correct:2, why:"App Engine (Google), Elastic Beanstalk (AWS) and App Services (Azure) are PaaS. Compute Engine, EC2 and Virtual Machines are IaaS."},
+  {q:"Where are cloud resources actually deployed in Google Cloud's geography?", opts:["Locations","Zones","Points of presence","Internet exchanges"], correct:1, why:"Zones are where resources are deployed. Regions contain multiple zones, and spreading across zones gives redundancy."},
+  {q:"About how much of the world's internet traffic can Google's network carry per day (per public estimates)?", opts:["About 4%","About 14%","About 40%","About 90%"], correct:2, why:"The slides cite publicly available estimates of as much as 40% of the world's daily internet traffic."}
+];
+
+const kcData = [
+  {q:"Which statement best describes cloud computing?", opts:["Storing all files on a local hard drive","A private network inside a single building","On-demand access to a shared pool of configurable computing resources","Buying and maintaining your own physical servers"], correct:2, mine:2, why:"Core of the NIST definition: on-demand, shared, configurable resources — not local storage or a single-building network."},
+  {q:"Which service provides raw compute, storage, and network capabilities, organized virtually into resources similar to physical data centers?", opts:["On-demand self-service","Broad network access","Resource pooling","Rapid elasticity"], correct:2, mine:1, why:"The stem describes IaaS, but none of the choices say \"IaaS\" — they're all essential characteristics. Resource pooling was the closest fit. Worth flagging to the instructor, since the options don't cleanly match the stem."},
+  {q:"A company automatically increases its computing resources when demand increases and decreases them when demand falls. Which characteristic does this demonstrate?", opts:["Resource pooling","Rapid elasticity","Measured service","Broad network access"], correct:1, mine:0, why:"Scaling up and down with demand is the definition of elasticity. Resource pooling is about sharing resources across customers, not scaling."},
+  {q:"A student creates a virtual machine in Google Cloud whenever needed without contacting a system administrator. Which characteristic does this illustrate?", opts:["Broad network access","Resource pooling","On-demand self-service","Measured service"], correct:2, mine:0, why:"\"Without contacting a system administrator\" is self-service. Broad network access is about reaching resources over the internet, not about skipping a human to provision them."},
+  {q:"Which cloud service model gives users the greatest control over operating systems, storage, and deployed applications?", opts:["SaaS","PaaS","IaaS","They all give the same control"], correct:2, mine:2, why:"IaaS gives control over the OS, storage and deployed apps; the provider only manages the physical infrastructure."},
+  {q:"Which of the following is the best example of Software as a Service (SaaS)?", opts:["Compute Engine","Gmail","App Engine","Kubernetes Engine"], correct:1, mine:1, why:"Gmail is a ready-to-use app accessed over the internet — the definition of SaaS. Compute Engine is IaaS and App Engine is PaaS."},
+  {q:"In Google Cloud, what is the relationship between a region and a zone?", opts:["A zone contains multiple regions","A region contains multiple zones","Regions and zones are the same thing","A zone is a global network"], correct:1, mine:1, why:"Regions are geographic areas made up of multiple zones (e.g., europe-west2-a, -b, -c)."},
+  {q:"Where do Google Cloud resources get deployed?", opts:["Region","Location","Zone","Point of presence"], correct:2, mine:0, why:"Zones are where cloud resources are deployed. Regions and locations are the broader groupings — the zone is the actual deployment unit."}
+];
+
+// ---------- State ----------
+let svcActive = "iaas";
+let labDone = lsGet('cloud-w1-lab', {});
+let zoneDown = {};
+
+// ---------- Characteristic flip cards ----------
+const charGrid = document.getElementById('charGrid');
+chars.forEach(e=>{
+  const card = document.createElement('div');
+  card.className = 'flip-card group [perspective:1200px] cursor-pointer select-none';
+  card.setAttribute('role','button');
+  card.setAttribute('tabindex','0');
+  card.setAttribute('aria-pressed','false');
+  card.innerHTML = `
+    <div class="flip-inner grid transition-transform duration-700 [transform-style:preserve-3d]" style="transform:rotateY(0deg);">
+      <div class="col-start-1 row-start-1 [backface-visibility:hidden] flex flex-col justify-center gap-2
+                  rounded-lg border-[1.5px] border-[#16150f] bg-[#fffdf7] p-4 min-h-[150px]
+                  shadow-[3px_3px_0_rgba(22,21,15,0.08)] transition-shadow duration-300 group-hover:shadow-[5px_5px_0_rgba(22,21,15,0.12)]">
+        <div class="font-mono text-[28px] font-bold" style="color:var(--violet); opacity:.75;">0${e.n}</div>
+        <div class="text-[15px] font-bold text-[#16150f] leading-snug">${e.title}</div>
+      </div>
+      <div class="col-start-1 row-start-1 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col justify-center
+                  rounded-lg border-[1.5px] border-[#16150f] p-4 min-h-[150px] text-[13.5px] text-[#f6f3ec]"
+           style="background:var(--violet);">
+        <p class="leading-snug">${e.back}</p>
+      </div>
+    </div>`;
+  const inner = card.querySelector('.flip-inner');
+  function toggleFlip(){
+    const flipped = card.getAttribute('aria-pressed') === 'true';
+    card.setAttribute('aria-pressed', String(!flipped));
+    inner.style.transform = flipped ? 'rotateY(0deg)' : 'rotateY(180deg)';
+  }
+  card.addEventListener('click', toggleFlip);
+  card.addEventListener('keydown', (ev)=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); toggleFlip(); } });
+  charGrid.appendChild(card);
+});
+
+// ---------- Service models ----------
+const svcTabs = document.getElementById('svcTabs');
+const svcPanel = document.getElementById('svcPanel');
+function renderServices(){
+  svcTabs.innerHTML = '';
+  services.forEach(s=>{
+    const btn = document.createElement('div');
+    btn.className = 'loop-tab ' + s.cls + (svcActive===s.id ? ' active' : '');
+    btn.textContent = s.label;
+    btn.setAttribute('role','button'); btn.setAttribute('tabindex','0');
+    const pick = ()=>{ svcActive=s.id; renderServices(); };
+    btn.addEventListener('click', pick);
+    btn.addEventListener('keydown', ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); pick(); } });
+    svcTabs.appendChild(btn);
+  });
+  const a = services.find(s=>s.id===svcActive);
+  svcPanel.innerHTML = `
+    <strong style="font-size:18px;">${a.title}</strong>
+    <p style="color:var(--sub); margin:8px 0 6px;">${a.desc}</p>
+    <p style="color:var(--sub); margin:0 0 4px; font-size:14px;"><strong style="color:var(--ink);">Control:</strong> ${a.control}</p>
+    <div class="stack">
+      ${layerNames.map((n,i)=>`<div class="layer ${a.you[i]?'you':'them'}"><span>${n}</span><small>${a.you[i]?'You manage':'Provider'}</small></div>`).join('')}
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;"><span class="tag-chip">${a.pay}</span></div>
+    ${a.ex.map(e=>`<div class="ex-row"><strong>${e[0]}</strong><span>${e[1]}</span></div>`).join('')}
+  `;
+}
+renderServices();
+
+// ---------- Google layers accordion ----------
+const layerList = document.getElementById('layerList');
+gcpLayers.forEach(l=>{
+  const item = document.createElement('div');
+  item.className = 'acc-item';
+  item.setAttribute('role','button'); item.setAttribute('tabindex','0');
+  item.innerHTML = `
+    <div class="acc-head"><strong>${l.title}</strong><span class="acc-plus">+</span></div>
+    <div class="acc-body"><p>${l.body}</p>${l.chips.length?`<div class="chips">${l.chips.map(c=>`<span class="tag-chip">${c}</span>`).join('')}</div>`:''}</div>`;
+  const tog = ()=>item.classList.toggle('open');
+  item.addEventListener('click', tog);
+  item.addEventListener('keydown', ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); tog(); } });
+  layerList.appendChild(item);
+});
+
+// ---------- Zone demo ----------
+const zonesEl = document.getElementById('zones');
+const zoneStatus = document.getElementById('zoneStatus');
+function renderZones(){
+  zonesEl.innerHTML = '';
+  zoneNames.forEach((z,i)=>{
+    const down = !!zoneDown[i];
+    const el = document.createElement('div');
+    el.className = 'zone' + (down ? ' down' : '');
+    el.setAttribute('role','button'); el.setAttribute('tabindex','0');
+    el.innerHTML = `<div class="zn">${z}</div><div class="vm">🖥️ Virtual machine · ${down?'offline':'running'}</div>`;
+    const tog = ()=>{ zoneDown[i]=!down; renderZones(); };
+    el.addEventListener('click', tog);
+    el.addEventListener('keydown', ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); tog(); } });
+    zonesEl.appendChild(el);
+  });
+  const downN = Object.values(zoneDown).filter(Boolean).length;
+  zoneStatus.className = 'zone-status' + (downN===0 ? '' : downN<3 ? ' warn' : ' bad');
+  zoneStatus.textContent = downN===0 ? 'All 3 zones up — full redundancy.'
+    : downN<3 ? `${3-downN} of 3 zones still up — the app stays available because the VM is replicated.`
+    : 'All zones down — outage. This is why multi-region matters for some services.';
+}
+renderZones();
+
+// ---------- Lab checklist ----------
+const cmdList = document.getElementById('cmdList');
+const cmdCount = document.getElementById('cmdCount');
+const cmdBar = document.getElementById('cmdBar');
+function renderLab(){
+  cmdList.innerHTML = '';
+  labSteps.forEach((c,i)=>{
+    const done = !!labDone[i];
+    const item = document.createElement('div');
+    item.className = 'cmd-item' + (done ? ' done' : '');
+    item.innerHTML = `<div class="cmd-check">${done ? '✓' : ''}</div><p>${c}</p>`;
+    item.addEventListener('click', ()=>{ labDone[i]=!done; lsSet('cloud-w1-lab', labDone); renderLab(); updateFooter(); });
+    cmdList.appendChild(item);
+  });
+  const n = Object.values(labDone).filter(Boolean).length;
+  cmdCount.textContent = n;
+  cmdBar.style.width = (n/labSteps.length*100) + '%';
+}
+document.getElementById('cmdReset').addEventListener('click', ()=>{ labDone={}; lsSet('cloud-w1-lab', labDone); renderLab(); updateFooter(); });
+renderLab();
+
+// ---------- Quiz factory ----------
+function makeQuiz(data, container, scoreEl, resetBtn, onChange){
+  const answers = {};
+  function score(){ return Object.keys(answers).filter(k=>answers[k]===data[k].correct).length; }
+  function render(){
+    container.innerHTML = '';
+    data.forEach((q,qi)=>{
+      const card = document.createElement('div');
+      card.className = 'quiz-card';
+      const answered = answers[qi] !== undefined;
+      const mine = (answered && q.mine !== undefined)
+        ? `<div class="quiz-mine ${q.mine===q.correct?'ok':'no'}">In class you picked: ${q.opts[q.mine]} ${q.mine===q.correct?'✓':'✗'}</div>` : '';
+      card.innerHTML = `
+        <div class="quiz-q">${qi+1}. ${q.q}</div>
+        <div class="quiz-opts">
+          ${q.opts.map((o,oi)=>{
+            let cls='quiz-opt';
+            if(answered){ if(oi===q.correct) cls+=' correct'; else if(oi===answers[qi]) cls+=' wrong'; }
+            return `<button class="${cls}" data-qi="${qi}" data-oi="${oi}" ${answered?'disabled':''}>${o}</button>`;
+          }).join('')}
+        </div>
+        <div class="quiz-why ${answered?'show':''}">${q.why}${mine?'<br>'+mine:''}</div>`;
+      container.appendChild(card);
+    });
+    container.querySelectorAll('.quiz-opt').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const qi = btn.dataset.qi;
+        if(answers[qi]!==undefined) return;
+        answers[qi] = parseInt(btn.dataset.oi);
+        render(); scoreEl.textContent = score(); onChange();
+      });
+    });
+  }
+  resetBtn.addEventListener('click', ()=>{ Object.keys(answers).forEach(k=>delete answers[k]); render(); scoreEl.textContent = score(); onChange(); });
+  render();
+  scoreEl.textContent = score();
+  return {score};
+}
+
+const quiz = makeQuiz(quizData, document.getElementById('quizContainer'), document.getElementById('quizScore'), document.getElementById('quizReset'), ()=>updateFooter());
+const kc = makeQuiz(kcData, document.getElementById('kcContainer'), document.getElementById('kcScore'), document.getElementById('kcReset'), ()=>updateFooter());
+
+function onAct(n,fn){ n.setAttribute('role','button'); n.setAttribute('tabindex','0'); n.addEventListener('click',fn); n.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); fn(); } }); }
+function buildAcc(container, items){
+  items.forEach(a=>{
+    const item=document.createElement('div');
+    item.className='acc-item';
+    item.innerHTML=`<div class="acc-head"><strong>${a.title}</strong><span class="acc-plus">+</span></div><div class="acc-body"><div class="acc-rich">${a.html}</div></div>`;
+    onAct(item,()=>item.classList.toggle('open'));
+    container.appendChild(item);
+  });
+}
+const slideNotes = [{"title": "Objectives and agenda (slides 3\u20134)", "html": "<ul><li>Explore cloud computing.</li><li>Essential characteristics.</li><li>Differentiate service models: IaaS, PaaS, and SaaS.</li><li>Be introduced to Google Cloud compute, storage, big data, and ML services.</li><li>Examine the Google network and how it powers cloud computing.</li></ul><p>Agenda: Cloud Computing \u00b7 Essential Characteristics \u00b7 Service Models: IaaS, PaaS, and SaaS \u00b7 Google Cloud Architecture \u00b7 Knowledge Check \u00b7 Hands-on Lab.</p><p><em>Heads-up:</em> the last two agenda slides list \"Cloud vs. traditional architecture\" as item 02, but no slide in the deck covers it.</p>"}, {"title": "NIST definition (slide 5)", "html": "<blockquote>Cloud computing is a model for enabling ubiquitous, convenient, on-demand network access to a shared pool of configurable computing resources (e.g., networks, servers, storage, applications, and services) that can be rapidly provisioned and released with minimal management effort or service provider interaction.</blockquote><ul><li>NIST = National Institute of Standards and Technology (speaker note). Source: SP 800-145.</li><li>\"This cloud model is composed of five essential characteristics, three service models, and four deployment models.\"</li><li>The slides never name the four deployment models, only the count.</li></ul>"}, {"title": "Five essential characteristics (slides 7\u201312, with speaker notes)", "html": "<p>The deck calls them \"five equally important traits\" and walks through them one at a time.</p><ul><li><strong>On-demand self-service:</strong> customers get computing resources that are on-demand and self-service. <em>Note:</em> computing capabilities such as server time, network and storage, provisioned as needed, automatically, without requiring human interaction with each service provider.</li><li><strong>Broad network access:</strong> customers get access to those resources over the internet, from anywhere.</li><li><strong>Resource pooling:</strong> the provider allocates resources to users out of that pool. <em>Note:</em> that lets the provider buy resources in bulk, and customers don't have to know or care about the exact physical location.</li><li><strong>Rapid elasticity:</strong> resources can increase or decrease as needed. <em>Note:</em> need more, get more quickly; need less, scale back.</li><li><strong>Measured service:</strong> customers pay only for what they use, or reserve as they go. <em>Note:</em> if they stop using resources, they stop paying.</li></ul>"}, {"title": "Three service models, slide by slide (14\u201320)", "html": "<p>Slide 14 opens with the three names (speaker note: \"with the move to virtualized data centers\").</p><ul><li><strong>IaaS:</strong> organized resources similar to physical data centers, with great control over the OS and everything above it. <em>Payment model: pay for what you allocate.</em></li><li><strong>PaaS:</strong> focus on managing applications, with code binding to libraries that provide access to the infrastructure the apps need. That lets more resources go to application logic. <em>Payment model: pay for what you use.</em></li><li><strong>SaaS:</strong> not installed on your local computer. They run in the cloud as a service and are consumed directly over the internet by end users.</li><li><strong>Slide 20 examples:</strong> IaaS = AWS EC2, Google Compute Engine, Azure Virtual Machines. PaaS = AWS Elastic Beanstalk, Google App Engine, Azure App Services. SaaS = Gmail, Google Drive, Dropbox, Slack, WebEx, Zoom.</li></ul>"}, {"title": "NIST's full IaaS definition (slide 15)", "html": "<blockquote>The capability provided to the consumer is to provision processing, storage, networks, and other fundamental computing resources where the consumer is able to deploy and run arbitrary software, which can include operating systems and applications. The consumer does not manage or control the underlying cloud infrastructure but has control over operating systems, storage, and deployed applications; and possibly limited control of select networking components (e.g., host firewalls).</blockquote>"}, {"title": "NIST's full PaaS definition (slide 15)", "html": "<blockquote>The capability provided to the consumer is to deploy onto the cloud infrastructure consumer-created or acquired applications created using programming languages, libraries, services, and tools supported by the provider. The consumer does not manage or control the underlying cloud infrastructure including network, servers, operating systems, or storage, but has control over the deployed applications and possibly configuration settings for the application-hosting environment.</blockquote>"}, {"title": "NIST's full SaaS definition (slide 15)", "html": "<blockquote>The capability provided to the consumer is to use the provider's applications running on a cloud infrastructure. The applications are accessible from various client devices through either a thin client interface, such as a web browser (e.g., web-based email), or a program interface. The consumer does not manage or control the underlying cloud infrastructure including network, servers, operating systems, storage, or even individual application capabilities, with the possible exception of limited user-specific application configuration set.</blockquote>"}, {"title": "Google Cloud infrastructure layers (slides 22\u201325)", "html": "<p>Speaker note on slide 22: three layers, on top of a base layer.</p><ul><li><strong>Networking and Security</strong> is the base layer.</li><li><strong>Compute</strong>: Compute Engine, Kubernetes Engine, App Engine, Cloud Functions, Cloud Run.</li><li><strong>Storage</strong>: relational databases and NoSQL databases. Your notes add Cloud SQL and Cloud Spanner (relational), Bigtable and Firestore (NoSQL), and Cloud Storage (object).</li><li><strong>Big Data and ML products</strong>: Cloud Storage, Dataproc, Cloud Bigtable, BigQuery, Dataflow, Firestore, Pub/Sub, Looker, Cloud Spanner, AutoML, Vertex AI.</li></ul>"}, {"title": "The Google network (slides 26\u201329)", "html": "<ul><li>The network is part of the foundation that supports all of Google's infrastructure and applications.</li><li><strong>40%:</strong> \"According to some publicly available estimates, Google's network carries as much as 40% of the world's internet traffic every day.\"</li><li>Google's network is the largest network of its kind.</li><li>Slide 28 map: locations and regions across North America, Europe, Asia, South America and Australia. Current and future regions each have 3 zones, with one exception that has 4 (Iowa, per your notes).</li><li>Slide 29 note: the network interconnects with the public internet at more than <strong>90 internet exchanges</strong> and more than <strong>110 points of presence</strong> worldwide.</li><li>Your notes also mention submarine cables: Grace Hopper, Dunant, Curie, Equiano.</li></ul>"}, {"title": "Locations, regions and zones (slides 30\u201334)", "html": "<ul><li>Geographic locations contain regions and zones.</li><li>Regions contain multiple zones. Example: region <code>europe-west2</code> (London) has zones <code>europe-west2-a</code>, <code>-b</code>, <code>-c</code>.</li><li><strong>Zones are where cloud resources are deployed.</strong> Running a VM in several zones gives resource redundancy.</li><li>Some services can run multi-region, for example across London and Belgium in Europe.</li><li>Scale on slide 34: <strong>130 zones, 43 regions</strong> (check cloud.google.com/about/locations for current numbers).</li></ul>"}];
+const scData = [{"q": "How many deployment models does the NIST definition say compose the cloud model?", "opts": ["Two", "Three", "Four", "Five"], "correct": 2, "why": "Five essential characteristics, three service models, and four deployment models."}, {"q": "Which characteristic's speaker note says it lets the provider buy resources in bulk?", "opts": ["Rapid elasticity", "Resource pooling", "Measured service", "Broad network access"], "correct": 1, "why": "Resource pooling: the provider allocates from a shared pool, which lets it buy in bulk. Customers don't need to know the physical location."}, {"q": "Which payment model do the slides pair with IaaS?", "opts": ["Pay for what they use", "Pay for what they allocate", "Free for students", "Pay once, own forever"], "correct": 1, "why": "IaaS = pay for what you allocate. PaaS = pay for what you use."}, {"q": "According to the NIST definition on the slides, what does the consumer NOT do in SaaS?", "opts": ["Use the provider's applications", "Access them through a thin client such as a browser", "Manage the underlying network, servers, OS and storage", "Make limited user-specific settings changes"], "correct": 2, "why": "In SaaS the consumer doesn't manage or control the underlying infrastructure, or even individual application capabilities, beyond limited user-specific configuration."}, {"q": "Which is the base layer of the Google Cloud infrastructure on slide 22?", "opts": ["Compute", "Storage", "Big Data and ML products", "Networking and Security"], "correct": 3, "why": "Networking and Security sits at the base. Compute, Storage and Big Data/ML build on it."}, {"q": "Which product is listed on the slides as part of the big data and ML line?", "opts": ["Compute Engine", "Vertex AI", "Cloud Run", "App Engine"], "correct": 1, "why": "The list includes Dataproc, BigQuery, Dataflow, Pub/Sub, Looker, AutoML and Vertex AI. The others are compute services."}, {"q": "At about how many internet exchanges does Google's network interconnect with the public internet?", "opts": ["Fewer than 10", "About 40", "More than 90", "More than 500"], "correct": 2, "why": "More than 90 internet exchanges and more than 110 points of presence worldwide."}, {"q": "Per the slides, where are cloud resources actually deployed, and how many zones do most regions have?", "opts": ["Regions; 1 zone", "Zones; 3 zones", "Locations; 2 zones", "Zones; 10 zones"], "correct": 1, "why": "Zones are where resources are deployed. Most regions have 3 zones, with a rare exception of 4."}];
+buildAcc(document.getElementById('slideNotes'), slideNotes);
+const sc = makeQuiz(scData, document.getElementById('sc_container'), document.getElementById('sc_score'), document.getElementById('sc_reset'), ()=>updateFooter());
+// ---------- Footer ----------
+function updateFooter(){
+  const ln = Object.values(labDone).filter(Boolean).length;
+  document.getElementById('footerStatus').textContent = `${ln}/${labSteps.length} lab steps · ${quiz.score()}/${quizData.length} on the check · ${kc.score()}/${kcData.length} on the knowledge check · ${sc.score()}/${scData.length} on the slide check`;
+}
+updateFooter();
+</script>
+</body>
+</html>

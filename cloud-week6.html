@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CETE 3370 · Class 06 · Storage Options, Part 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --bg:#f6f3ec;
+    --ink:#16150f;
+    --sub:#454236;
+    --muted:#6a6656;
+    --line:#cfc9b6;
+    --card:#fffdf7;
+    --red:oklch(0.53 0.19 25);
+    --red-soft:oklch(0.94 0.045 25);
+    --blue:oklch(0.46 0.14 255);
+    --blue-soft:oklch(0.93 0.03 255);
+    --violet:oklch(0.48 0.15 300);
+    --violet-soft:oklch(0.94 0.035 300);
+    --good:oklch(0.58 0.14 150);
+    --good-soft:oklch(0.94 0.05 150);
+    --bad:oklch(0.55 0.18 25);
+    --bad-soft:oklch(0.94 0.06 25);
+    --amber:oklch(0.72 0.15 75);
+    --amber-soft:oklch(0.95 0.05 75);
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'Space Grotesk', Helvetica, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.5; padding-bottom:60px;}
+  .wrap{max-width:920px; margin:0 auto; padding:0 20px;}
+  header.hero{
+    border-bottom:3px solid var(--ink);
+    padding:34px 20px 26px;
+    background:repeating-linear-gradient(135deg, transparent, transparent 26px, rgba(22,21,15,0.03) 26px, rgba(22,21,15,0.03) 27px);
+  }
+  .kicker{font-family:var(--mono); font-size:12.5px; letter-spacing:.06em; color:var(--sub); text-transform:uppercase; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .kicker .dot{color:var(--muted);}
+  h1.title{font-size:clamp(28px,5vw,44px); line-height:1.05; margin:10px 0 6px; font-weight:700; letter-spacing:-0.01em;}
+  .subtitle{color:var(--sub); font-size:16px; max-width:620px;}
+  .prompt{font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:16px;}
+  .backlink{font-family:var(--mono); font-size:12px; color:var(--muted); text-decoration:none; display:inline-block; margin-bottom:12px;}
+  .backlink:hover{color:var(--violet);}
+
+  .badge{display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:3px 10px; border:1.5px solid var(--ink); border-radius:3px; margin-bottom:10px;}
+  .badge.risk{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .badge.red{background:var(--red-soft); border-color:var(--red); color:var(--red);}
+  .badge.blue{background:var(--blue-soft); border-color:var(--blue); color:var(--blue);}
+  .badge.plain{background:var(--card);}
+
+  section{padding:36px 0; border-bottom:1.5px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2.h{font-size:26px; font-weight:700; margin:0 0 6px; letter-spacing:-0.01em;}
+  .lede{color:var(--sub); margin-bottom:20px; max-width:640px;}
+
+  .card{background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:18px 20px; box-shadow:3px 3px 0 rgba(22,21,15,0.08);}
+  ul.tight{margin:8px 0; padding-left:20px;}
+  ul.tight li{margin-bottom:5px;}
+
+  /* Housekeeping */
+  .house-grid{display:grid; gap:12px;}
+  .house-item{background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:14px 16px; display:flex; gap:14px; align-items:flex-start;}
+  .house-item .tag{font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.05em; background:var(--amber-soft); border:1.5px solid var(--ink); border-radius:5px; padding:2px 8px; white-space:nowrap; flex-shrink:0; margin-top:2px;}
+  .house-item a{color:var(--blue); word-break:break-all;}
+
+  /* NIST quote */
+  .nist{border-left:5px solid var(--violet);}
+  .nist blockquote{margin:0 0 12px; font-size:15.5px; color:var(--ink);}
+  .nist mark{background:var(--amber-soft); border-bottom:2px solid var(--amber); padding:0 2px; color:inherit;}
+  .nist-counts{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-top:14px;}
+  .nist-count{border:1.5px solid var(--line); border-radius:7px; background:var(--bg); padding:10px 12px; text-align:center;}
+  .nist-count b{display:block; font-family:var(--mono); font-size:28px; color:var(--violet);}
+  .nist-count span{font-size:12.5px; color:var(--sub);}
+
+  /* Tabs */
+  .loop-tabs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;}
+  .loop-tab{font-family:var(--mono); font-size:12.5px; font-weight:600; border:1.5px solid var(--ink); border-radius:6px; background:var(--card); padding:8px 14px; cursor:pointer; transition:all .15s;}
+  .loop-tab.active{background:var(--violet); color:var(--bg); border-color:var(--violet);}
+  .loop-tab:hover:not(.active){background:var(--violet-soft);}
+  .loop-tab.t-red.active{background:var(--red); border-color:var(--red);}
+  .loop-tab.t-blue.active{background:var(--blue); border-color:var(--blue);}
+  .loop-tab.t-good.active{background:var(--good); border-color:var(--good);}
+  .loop-tab.t-amber.active{background:var(--amber); border-color:var(--amber); color:var(--ink);}
+  .tag-chip{font-family:var(--mono); font-size:11.5px; padding:4px 10px; border:1.5px solid var(--line); border-radius:999px; color:var(--sub); background:var(--bg);}
+
+  /* Responsibility stack */
+  .stack{display:flex; flex-direction:column; gap:4px; margin:14px 0;}
+  .layer{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 12px; border:1.5px solid var(--ink); border-radius:5px; font-size:13.5px; font-weight:600; transition:background .2s;}
+  .layer small{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; font-weight:700;}
+  .layer.you{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .layer.them{background:var(--bg); border-color:var(--line); color:var(--muted);}
+  .ex-row{display:flex; justify-content:space-between; gap:12px; font-size:14px; padding:8px 0; border-top:1px dashed var(--line);}
+  .ex-row strong{color:var(--blue); flex-shrink:0;}
+  .ex-row span{text-align:right;}
+
+  /* Accordion */
+  .acc-item{border:1.5px solid var(--ink); border-radius:8px; background:var(--card); padding:14px 16px; cursor:pointer; margin-bottom:10px; transition:box-shadow .15s;}
+  .acc-item:hover{box-shadow:3px 3px 0 rgba(22,21,15,0.08);}
+  .acc-head{display:flex; justify-content:space-between; align-items:center; gap:10px;}
+  .acc-head strong{font-size:15.5px;}
+  .acc-plus{font-family:var(--mono); font-size:18px; color:var(--violet); flex-shrink:0; transition:transform .2s;}
+  .acc-item.open .acc-plus{transform:rotate(45deg);}
+  .acc-body{max-height:0; overflow:hidden; transition:max-height .25s ease;}
+  .acc-item.open .acc-body{max-height:320px;}
+  .acc-body p{font-size:14px; color:var(--sub); margin:10px 0 0; padding-top:10px; border-top:1px dashed var(--line);}
+  .acc-body .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;}
+
+  /* Stats */
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px;}
+  .stat .big{font-family:var(--mono); font-size:34px; font-weight:700; color:var(--blue); line-height:1.1;}
+  .stat .lbl{font-size:13px; color:var(--sub); margin-top:4px;}
+
+  /* Zone demo */
+  .zone-wrap{display:grid; gap:12px;}
+  .region-box{border:1.5px dashed var(--ink); border-radius:10px; padding:14px; background:var(--card);}
+  .region-name{font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.05em; margin-bottom:10px;}
+  .zones{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px;}
+  .zone{border:1.5px solid var(--ink); border-radius:8px; padding:12px; background:var(--good-soft); cursor:pointer; transition:all .2s; user-select:none;}
+  .zone:hover{box-shadow:3px 3px 0 rgba(22,21,15,0.1);}
+  .zone .zn{font-family:var(--mono); font-size:12.5px; font-weight:700;}
+  .zone .vm{margin-top:8px; font-size:13px; border:1.5px solid var(--good); background:var(--bg); border-radius:5px; padding:6px 8px;}
+  .zone.down{background:var(--bad-soft); border-color:var(--bad); opacity:.85;}
+  .zone.down .vm{border-color:var(--bad); text-decoration:line-through; color:var(--muted);}
+  .zone-status{margin-top:12px; font-size:14px; padding:10px 14px; border-radius:6px; border:1.5px solid var(--ink); background:var(--good-soft); font-weight:600;}
+  .zone-status.warn{background:var(--amber-soft);}
+  .zone-status.bad{background:var(--bad-soft);}
+
+  /* Checklist */
+  .cmd-status{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:14px 18px; margin-bottom:14px;}
+  .cmd-count{font-family:var(--mono); font-size:24px; color:var(--violet); font-weight:700;}
+  .cmd-bar-track{flex:1; min-width:140px; height:8px; background:var(--line); border-radius:999px; overflow:hidden;}
+  .cmd-bar-fill{height:100%; width:0%; background:var(--violet); border-radius:999px; transition:width .35s;}
+  .ghost-btn{font-family:var(--mono); font-size:11.5px; letter-spacing:.05em; text-transform:uppercase; padding:7px 13px; background:var(--bg); border:1.5px solid var(--ink); border-radius:999px; color:var(--ink); cursor:pointer;}
+  .ghost-btn:hover{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .cmd-item{display:flex; align-items:flex-start; gap:12px; padding:12px 14px; background:var(--card); border:1.5px solid var(--line); border-radius:7px; cursor:pointer; transition:opacity .2s, border-color .2s; margin-bottom:8px;}
+  .cmd-item.done{opacity:0.55; border-color:var(--good);}
+  .cmd-check{flex-shrink:0; width:22px; height:22px; border-radius:5px; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:13px; color:var(--bg); margin-top:1px; background:var(--bg);}
+  .cmd-item.done .cmd-check{background:var(--good); border-color:var(--good);}
+  .cmd-item p{margin:0; font-size:14.5px;}
+  .cmd-callout{margin-top:14px; background:var(--amber-soft); border:1.5px solid var(--ink); border-left:4px solid var(--amber); border-radius:6px; padding:14px 16px; font-size:13.5px; line-height:1.5; color:var(--sub);}
+
+  /* Cheat sheet */
+  .cheat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px;}
+  .cheat-card .label{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--violet); margin-bottom:6px;}
+  .cheat-card p{font-size:13.5px; line-height:1.45; margin:0; color:var(--sub);}
+
+  /* Quiz */
+  .quiz-card{border:1.5px solid var(--ink); border-radius:8px; padding:16px; background:var(--card); margin-bottom:14px;}
+  .quiz-q{font-weight:600; margin-bottom:10px;}
+  .quiz-opts{display:flex; flex-direction:column; gap:8px;}
+  .quiz-opt{text-align:left; padding:9px 12px; border:1.5px solid var(--line); border-radius:6px; background:var(--bg); cursor:pointer; font-family:var(--sans); font-size:14px; transition:all .15s; color:var(--ink);}
+  .quiz-opt:hover:not(:disabled){border-color:var(--violet);}
+  .quiz-opt.correct{background:var(--good-soft); border-color:var(--good); font-weight:700;}
+  .quiz-opt.wrong{background:var(--bad-soft); border-color:var(--bad);}
+  .quiz-why{display:none; margin-top:10px; font-size:13px; color:var(--sub); border-top:1px dashed var(--line); padding-top:10px;}
+  .quiz-why.show{display:block;}
+  .quizbar{position:sticky; bottom:0; background:var(--ink); color:var(--bg); border-radius:8px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); margin-top:6px;}
+  .quizbar button{font-family:var(--mono); background:var(--bg); color:var(--ink); border:none; border-radius:5px; padding:7px 14px; cursor:pointer; font-weight:700;}
+
+  .quiz-mine{font-family:var(--mono); font-size:11.5px; display:inline-block; margin-top:10px; padding:2px 10px; border-radius:999px; border:1.5px solid;}
+  .quiz-mine.ok{border-color:var(--good); background:var(--good-soft);}
+  .quiz-mine.no{border-color:var(--bad); background:var(--bad-soft);}
+  .pair-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-top:16px;}
+  .pair-card .label{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--red); margin-bottom:6px;}
+  .pair-card p{font-size:13.5px; margin:4px 0; color:var(--sub);}
+
+  footer{text-align:center; font-family:var(--mono); font-size:12px; color:var(--muted); padding:30px 20px 0;}
+  #footerStatus{color:var(--violet); font-weight:600;}
+
+  .flip-inner{transition-timing-function:cubic-bezier(.34,1.56,.64,1);}
+  .flip-card:active .flip-inner{transform:scale(0.97) !important;}
+
+  code{font-family:var(--mono); font-size:12.5px; background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:1px 5px; color:var(--ink);}
+  .scroll-x{overflow-x:auto;}
+  table.cmp{width:100%; border-collapse:collapse; font-size:14px; background:var(--card); border:1.5px solid var(--ink);}
+  .cmp th,.cmp td{padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top;}
+  .cmp th{font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; background:var(--violet-soft); color:var(--violet);}
+  .cmp td:first-child{font-weight:700;}
+  .cmp tr:last-child td{border-bottom:none;}
+  .acc-item.open .acc-body{max-height:900px;}
+  .acc-rich{font-size:14px; color:var(--sub); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);}
+  .acc-rich p{margin:0 0 8px;}
+  .acc-rich ul{margin:6px 0 8px; padding-left:20px;}
+  .acc-rich li{margin-bottom:5px;}
+  .acc-rich blockquote{margin:0 0 8px; padding-left:12px; border-left:3px solid var(--violet);}
+
+  code{font-family:var(--mono); font-size:12.5px; background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:1px 5px; color:var(--ink);}
+  .cmd-detail{display:block; font-size:12.5px; color:var(--muted); margin-top:3px;}
+  .acc-item.open .acc-body{max-height:900px;}
+  .acc-rich{font-size:14px; color:var(--sub); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);}
+  .acc-rich p{margin:0 0 8px;}
+  .acc-rich ul{margin:6px 0 8px; padding-left:20px;}
+  .acc-rich li{margin-bottom:5px;}
+  .acc-rich blockquote{margin:0 0 8px; padding-left:12px; border-left:3px solid var(--violet);}
+  .acc-body ul{margin:8px 0 0; padding-left:20px; font-size:14px; color:var(--sub);}
+  .acc-body li{margin-bottom:4px;}
+  .grid-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px;}
+  .mini h3{font-size:16px; margin:0 0 4px;}
+  .mini p{font-size:13.5px; color:var(--sub); margin:6px 0 0;}
+  .mini .tag-chip{display:inline-block;}
+  .scroll-x{overflow-x:auto;}
+  table.cmp{width:100%; border-collapse:collapse; font-size:14px; background:var(--card); border:1.5px solid var(--ink); border-radius:8px;}
+  .cmp th,.cmp td{padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top;}
+  .cmp th{font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; background:var(--violet-soft); color:var(--violet);}
+  .cmp td:first-child{font-weight:700;}
+  .cmp tr:last-child td{border-bottom:none;}
+  .spec{display:flex; align-items:center; gap:0; margin:0 0 16px;}
+  .spec .dotp{width:14px; height:14px; border-radius:50%; border:1.5px solid var(--ink); background:var(--bg); flex-shrink:0;}
+  .spec .dotp.on{background:var(--violet); border-color:var(--violet); transform:scale(1.35);}
+  .spec .seg{flex:1; height:2px; background:var(--line);}
+  .spec-lbl{display:flex; justify-content:space-between; font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px;}
+  .sim-top{display:flex; flex-direction:column; gap:6px;}
+  .sim-top input[type=range]{width:100%; accent-color:var(--violet);}
+  .sim-meta{font-size:14px; color:var(--sub); margin-top:8px;}
+  .sim-meta b{font-family:var(--mono); color:var(--ink);}
+  .sim-bars{display:flex; gap:6px; align-items:flex-end; height:150px; margin:14px 0 10px;}
+  .sim-bar{flex:1; min-width:16px; max-width:64px; height:100%; border:1.5px solid var(--ink); border-radius:4px 4px 0 0; background:var(--bg); display:flex; align-items:flex-end; overflow:hidden;}
+  .sim-fill{width:100%; transition:height .25s, background .25s;}
+  .steps-list{font-family:var(--mono); font-size:12.5px; color:var(--sub); border-top:1px dashed var(--line); padding-top:10px; display:flex; flex-direction:column; gap:4px;}
+  .steps-list .hd{font-family:var(--sans); font-size:14px; font-weight:700; color:var(--ink); margin-bottom:4px;}
+  .layer.goog{background:var(--blue-soft); border-color:var(--blue); color:var(--blue);}
+  .layer.cust{background:var(--amber-soft); border-color:var(--amber); color:var(--ink);}
+  .meter{display:flex; gap:4px; margin:2px 0 8px;}
+  .meter i{width:26px; height:10px; border:1.5px solid var(--ink); border-radius:3px; background:var(--bg);}
+  .meter i.on{background:var(--violet); border-color:var(--violet);}
+  .tree{font-family:var(--mono); font-size:13px; display:flex; flex-direction:column; gap:5px; margin:10px 0;}
+  .tnode{border:1.5px solid var(--line); border-radius:6px; padding:6px 10px; background:var(--card); cursor:pointer; user-select:none; transition:all .15s;}
+  .tnode.hit{background:var(--violet-soft); border-color:var(--violet); color:var(--violet); font-weight:700;}
+  .tnode.sel{background:var(--violet); border-color:var(--violet); color:var(--bg); font-weight:700;}
+  .perm{font-family:var(--mono); font-size:12px; padding:5px 10px; border:1.5px solid var(--line); border-radius:999px; background:var(--bg); cursor:pointer; user-select:none;}
+  .perm.on{background:var(--good-soft); border-color:var(--good); font-weight:700;}
+  .sorter{display:flex; flex-direction:column; gap:8px;}
+  .sort-row{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; border:1.5px solid var(--line); border-radius:7px; padding:8px 12px; background:var(--card);}
+  .sort-row.ok{border-color:var(--good); background:var(--good-soft);}
+  .sort-row.no{border-color:var(--bad); background:var(--bad-soft);}
+  .vers{display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:8px; margin:10px 0;}
+  .vcell{border:1.5px solid var(--ink); border-radius:6px; padding:8px; text-align:center; font-family:var(--mono); font-size:12px; background:var(--blue-soft);}
+  .vcell.old{opacity:.5; background:var(--bg);}
+  .vm{}
+  .vmgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:6px;}
+  .vbox{display:flex; flex-direction:column; gap:3px;}
+  .vl{border:1.5px solid var(--ink); border-radius:5px; padding:7px 8px; font-size:12.5px; font-weight:600; text-align:center;}
+  .vl.app{background:var(--blue-soft); border-color:var(--blue); color:var(--blue);}
+  .vl.lib{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .vl.os{background:var(--amber-soft);}
+  .vl.base{background:var(--bg); border-color:var(--line); color:var(--muted); margin-bottom:3px;}
+  .k8s{border:1.5px dashed var(--ink); border-radius:10px; padding:14px; background:var(--card);}
+  .k8s-nodes{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:10px 0;}
+  .k8s-node{border:1.5px solid var(--ink); border-radius:8px; padding:10px; background:var(--blue-soft); cursor:pointer; user-select:none;}
+  .k8s-node .nn{font-family:var(--mono); font-size:11.5px; font-weight:700; margin-bottom:6px;}
+  .k8s-c{display:inline-block; font-size:11.5px; font-family:var(--mono); background:var(--card); border:1.5px solid var(--violet); color:var(--violet); border-radius:4px; padding:2px 6px; margin:2px 3px 2px 0;}
+  .ev-steps{display:flex; flex-direction:column; gap:6px; margin-top:12px;}
+  .ev-step{border:1.5px solid var(--line); border-radius:6px; padding:8px 12px; font-size:14px; background:var(--bg); opacity:0; transform:translateY(4px); transition:all .25s;}
+  .ev-step.show{opacity:1; transform:none; border-color:var(--violet); background:var(--violet-soft);}
+  .tl{display:grid; grid-template-columns:repeat(12,1fr); gap:3px; margin:6px 0 12px;}
+  .tl .slot{height:34px; border:1.5px solid var(--ink); border-radius:4px; background:var(--bg); cursor:pointer;}
+  .tl .slot.on{background:var(--violet);}
+  .tl.vm .slot{background:var(--amber); cursor:default;}
+  .tl-label{font-family:var(--mono); font-size:11.5px; letter-spacing:.04em; color:var(--sub);}
+  .flow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:12px 0;}
+  .flow .node{border:1.5px solid var(--ink); border-radius:6px; padding:8px 12px; font-size:13px; font-weight:600; background:var(--card);}
+  .flow .arr{font-family:var(--mono); color:var(--muted);}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <a class="backlink" href="index.html">← Class Notes index</a>
+    <div class="kicker">CETE 3370 <span class="dot">·</span> CLOUD COMPUTING <span class="dot">·</span> CLASS 06 <span class="dot">·</span> Module 6</div>
+    <h1 class="title">Storage Options, Part 2</h1>
+    <p class="subtitle">From September 29 — Cloud Spanner, Firestore and Bigtable, the module 5–6 knowledge check answers, and the midterm rules.</p>
+    <div class="prompt">lvasq@tamusa:~/cloud-computing#</div>
+  </div>
+</header>
+<div class="wrap">
+
+  <section>
+    <span class="badge risk">📌 Midterm</span>
+    <h2 class="h">Tuesday, October 6: What to Expect</h2>
+    <div class="house-grid">
+      <div class="house-item"><span class="tag">WHERE</span><div>Blackboard, while you stay in the Zoom session with your <strong>camera on</strong>. The exam opens once everyone is present.</div></div>
+      <div class="house-item"><span class="tag">COVERS</span><div>The <strong>six lecture modules</strong> (M1–M6, including this one).</div></div>
+      <div class="house-item"><span class="tag">ALLOWED</span><div><strong>Only the lecture slides.</strong> No other references and no AI tools.</div></div>
+      <div class="house-item"><span class="tag">FORMAT</span><div>Like the knowledge checks: multiple choice, true/false and short answer. There is a time limit, so know the material instead of searching slides.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="badge plain">📌 Admin</span>
+    <h2 class="h">Lab 5: Cloud Spanner</h2>
+    <div class="house-grid">
+      <div class="house-item"><span class="tag">DUE</span><div>Monday, October 5 at midnight (it was "next Monday" in class). Submit screenshots with your name visible.</div></div>
+      <div class="house-item"><span class="tag">SHOTS</span><div>Check my progress after task 2 (database) and task 3 (schema), then task 4 (insert your own row and <code>SELECT * FROM Singers</code>), and task 5 (test your knowledge). At least four.</div></div>
+      <div class="house-item"><span class="tag">NOTE</span><div>Labs time out. A student's lab closed partway through, and whether it can be reopened was left unanswered in class. Firestore Qwik Start is practice only, not an assignment.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="badge red">Cloud Spanner</span>
+    <h2 class="h">Relational, Global, Horizontally Scalable</h2>
+    <p class="lede">Fully managed relational database: <strong>scales horizontally</strong>, <strong>strongly consistent</strong>, <strong>speaks SQL</strong>.</p>
+    <div class="card">
+      <strong>Horizontal vs vertical scaling</strong>
+      <p style="font-size:14px; color:var(--sub); margin:6px 0 10px;">Raise the load, then scale each way.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="ghost-btn" id="loadUp">Load up</button>
+        <button class="ghost-btn" id="loadDown">Load down</button>
+        <button class="ghost-btn" id="scReset">Reset</button>
+      </div>
+      <div class="tl-label" style="margin-top:12px;">HORIZONTAL: add or remove servers</div>
+      <div class="vers" id="hBox"></div>
+      <div class="tl-label">VERTICAL: one instance, bigger or smaller</div>
+      <div class="meter" id="vBox" style="height:auto;"></div>
+      <div class="zone-status" id="scOut" style="margin-top:10px;"></div>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <strong>Synchronous replication</strong>
+      <p style="font-size:14px; color:var(--sub); margin:6px 0 10px;">Click a zone to write an update. It is instantly copied to the others. Take a zone offline: data is still served.</p>
+      <div class="vers" id="zones"></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="ghost-btn" id="zOff">Toggle Zone 1 offline</button></div>
+      <div class="zone-status" id="zOut" style="margin-top:10px;"></div>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <strong>Especially suited for applications that need</strong>
+      <ul class="tight">
+        <li>A SQL relational DBMS with joins and secondary indexes</li>
+        <li>Built-in high availability (minimal or zero downtime)</li>
+        <li>Strong global consistency</li>
+        <li>Database sizes that exceed 2 TB</li>
+        <li>Tens of thousands of reads/writes per second or more</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <span class="badge blue">Firestore</span>
+    <h2 class="h">Documents, Collections, Offline Sync</h2>
+    <p class="lede">NoSQL document store, ideal for mobile and web: flexible, scales horizontally, indexed by default. <strong>A document is a record. A collection is like a table.</strong></p>
+    <div class="grid-cards">
+      <div class="card mini"><h3>Relational (Spanner, Cloud SQL)</h3><p>Table → rows (records) → columns (fields). Queried with SQL.</p></div>
+      <div class="card mini"><h3>Firestore</h3><p>Collection → documents (records) → field–value pairs, like JSON. Queried with NoSQL queries: filter and sort.</p></div>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <strong>Collection <code>students</code></strong>
+      <p style="font-size:14px; color:var(--sub); margin:6px 0 10px;">Click a document to see it as field–value pairs.</p>
+      <div class="loop-tabs" id="docTabs"></div>
+      <div class="card" id="docPanel" style="font-family:var(--mono); font-size:13px; white-space:pre;"></div>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <strong>Offline persistence demo</strong>
+      <p style="font-size:14px; color:var(--sub); margin:6px 0 10px;">Go offline, make changes, reconnect.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="ghost-btn" id="fsNet"></button>
+        <button class="ghost-btn" id="fsWrite">Write a change</button>
+        <button class="ghost-btn" id="fsReset">Reset</button>
+      </div>
+      <div class="vers" id="fsBox"></div>
+      <div class="zone-status" id="fsOut"></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="badge risk">Bigtable</span>
+    <h2 class="h">Massive Scale, Low Latency</h2>
+    <p class="lede">Google's NoSQL big data database service. Powers Search, Analytics, Maps and Gmail. Good for IoT, user analytics and financial data analysis.</p>
+    <div class="grid-cards">
+      <div class="card mini"><h3>Fast and performant</h3><p>High performance under high loads, low latency, high throughput.</p></div>
+      <div class="card mini"><h3>Seamless scaling</h3><p>Billions of rows, thousands of columns. No downtime during reconfiguration; replication adds availability.</p></div>
+      <div class="card mini"><h3>Fully managed</h3><p>Google handles configuration and tuning; backups for disaster recovery.</p></div>
+      <div class="card mini"><h3>Integrated</h3><p>Works with open-source big data tools (Hadoop and similar).</p></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="badge blue">Which Service?</span>
+    <h2 class="h">The Whole Chart, Both Parts</h2>
+    <div class="card"><div class="sorter" id="pick"></div><div class="zone-status" id="pickOut" style="margin-top:12px;"></div></div>
+  </section>
+
+  <section>
+    <span class="badge blue">Hands-on Labs</span>
+    <h2 class="h">Lab Progress</h2>
+    <div class="cmd-status">
+      <div style="display:flex; align-items:baseline; gap:8px;">
+        <span class="cmd-count" id="lab_count">0</span>
+        <span style="font-family:var(--mono); font-size:12px; color:var(--sub);">/ 5 steps</span>
+      </div>
+      <div class="cmd-bar-track"><div class="cmd-bar-fill" id="lab_bar"></div></div>
+      <button class="ghost-btn" id="lab_reset">Reset</button>
+    </div>
+    <div id="lab_list"></div>
+    <div class="card" style="margin-top:14px;">
+      <strong>The SQL from the lab</strong>
+      <pre style="white-space:pre-wrap; font-family:var(--mono); font-size:12.5px; margin:8px 0 0;">CREATE TABLE Singers (
+  SingerId INT64 NOT NULL,
+  FirstName STRING(1024),
+  LastName STRING(1024),
+  SingerInfo BYTES(MAX),
+  BirthDate DATE
+) PRIMARY KEY (SingerId);
+
+INSERT INTO Singers (SingerId, FirstName, LastName, SingerInfo, BirthDate)
+VALUES (1, 'Marc', 'Richards', NULL, NULL);
+
+SELECT * FROM Singers;</pre>
+      <p style="font-size:13px; color:var(--muted); margin:8px 0 0;">Reconstructed from the class walkthrough; copy the exact statements from the lab. Strings use single quotes, values are comma-separated, and the last one has no trailing comma.</p>
+    </div>
+  </section>
+
+  <!-- FROM THE SLIDES -->
+  <section>
+    <span class="badge risk">From the Slides</span>
+    <h2 class="h">Slide-by-Slide Notes</h2>
+    <p class="lede">Everything on the Module 6 deck, grouped the way the agenda runs, including the speaker notes. Click a row to expand it.</p>
+    <div id="slideNotes"></div>
+  </section>
+
+  <section>
+    <span class="badge blue">Vocabulary</span>
+    <h2 class="h">Terms to Know</h2>
+    <p class="lede">Worded from the slides wherever possible.</p>
+    <div class="scroll-x"><table class="cmp">
+      <tr><th>Term</th><th>Meaning</th></tr>
+      <tr><td>Cloud Spanner</td><td style="font-weight:400;">Fully managed relational database: scales horizontally, strongly consistent, speaks SQL.</td></tr>
+      <tr><td>Horizontal scaling</td><td style="font-weight:400;">Scale by adding and removing servers.</td></tr>
+      <tr><td>Vertical scaling</td><td style="font-weight:400;">Make a single instance larger or smaller.</td></tr>
+      <tr><td>Strong consistency</td><td style="font-weight:400;">A read returns the value of the most recent completed write; copies are kept up-to-date and identical.</td></tr>
+      <tr><td>Synchronous replication</td><td style="font-weight:400;">Data is instantly copied across zones/regions when updated.</td></tr>
+      <tr><td>Secondary index</td><td style="font-weight:400;">An extra index on a table to speed lookups; Spanner supports joins and secondary indexes.</td></tr>
+      <tr><td>High availability</td><td style="font-weight:400;">Continuous access with minimal or zero downtime.</td></tr>
+      <tr><td>IOPS</td><td style="font-weight:400;">Input/output operations per second; Spanner suits tens of thousands of reads/writes per second or more.</td></tr>
+      <tr><td>Firestore</td><td style="font-weight:400;">NoSQL document database for mobile and web: flexible, horizontally scalable.</td></tr>
+      <tr><td>Document</td><td style="font-weight:400;">A data record of field–value pairs, like a JSON object.</td></tr>
+      <tr><td>Collection</td><td style="font-weight:400;">A group of documents; like a table.</td></tr>
+      <tr><td>Field–value pair</td><td style="font-weight:400;">One named field with its value inside a document.</td></tr>
+      <tr><td>Indexed by default</td><td style="font-weight:400;">Firestore indexes each document automatically.</td></tr>
+      <tr><td>Offline persistence</td><td style="font-weight:400;">Firestore caches data so apps work offline, then syncs local changes on reconnect.</td></tr>
+      <tr><td>Cloud Bigtable</td><td style="font-weight:400;">Fully managed NoSQL big data service: low latency, high throughput, billions of rows.</td></tr>
+      <tr><td>NoSQL</td><td style="font-weight:400;">Non-relational databases, usually for unstructured data; Firestore and Bigtable.</td></tr>
+      <tr><td>BigQuery</td><td style="font-weight:400;">SQL data warehouse for analytical workloads; used later for AI/ML tasks.</td></tr>
+      <tr><td>Transactional vs analytical</td><td style="font-weight:400;">Frequent app reads/writes vs large-scale analysis of big data.</td></tr>
+    </table></div>
+  </section>
+
+  <!-- KNOWLEDGE CHECK -->
+  <section>
+    <span class="badge red">Knowledge Check</span>
+    <h2 class="h">M5–M6 Answers, Confirmed in Class + Practice</h2>
+    <p class="lede">The instructor went through the M5–M6 poll answers in class (the quiz itself is on the Week 5 page). Recap below, then 8 practice scenarios I wrote, not from class.</p>
+    <div class="house-grid">
+      <div class="house-item"><span class="tag">Q1</span><div>Table of student IDs, names, majors = structured.</div></div>
+      <div class="house-item"><span class="tag">Q2</span><div>Files read/updated many times a day = <strong>Standard</strong>.</div></div>
+      <div class="house-item"><span class="tag">Q3</span><div>Two managed relational services = Cloud SQL and Cloud Spanner. <em>(Not read aloud in the transcript.)</em></div></div>
+      <div class="house-item"><span class="tag">Q4</span><div>Photos, videos, PDFs for a website = <strong>Cloud Storage</strong>.</div></div>
+      <div class="house-item"><span class="tag">Q5–6</span><div>Horizontally scalable, global, transactional SQL = <strong>Cloud Spanner</strong>.</div></div>
+      <div class="house-item"><span class="tag">Q7</span><div>Horizontal scaling = <strong>adding (or removing) servers</strong>.</div></div>
+      <div class="house-item"><span class="tag">Q8</span><div>Firestore = <strong>documents grouped into collections</strong>.</div></div>
+      <div class="house-item"><span class="tag">Q9</span><div>Offline changes <strong>synchronize</strong> when the device reconnects.</div></div>
+      <div class="house-item"><span class="tag">Q10</span><div>IoT sensors, NoSQL, high throughput, low latency = <strong>Bigtable</strong>.</div></div>
+    </div>
+    <h3 style="margin:18px 0 8px;">Practice scenarios</h3>
+    <div id="kc_container"></div>
+    <div id="kc_bar" class="quizbar">
+      <span><span id="kc_score">0</span>/8 correct</span>
+      <button id="kc_reset">Reset</button>
+    </div>
+  </section>
+
+  <!-- SLIDE CHECK -->
+  <section>
+    <span class="badge risk">Slide Check</span>
+    <h2 class="h">Questions From the Slides</h2>
+    <p class="lede">9 extra questions written from the deck itself, since slide wording is what tends to show up on exams. These are mine, not your instructor's.</p>
+    <div id="sc_container"></div>
+    <div id="sc_bar" class="quizbar">
+      <span><span id="sc_score">0</span>/9 correct</span>
+      <button id="sc_reset">Reset</button>
+    </div>
+  </section>
+
+  <!-- CHEAT SHEET -->
+  <section>
+    <span class="badge plain">Cheat Sheet</span>
+    <h2 class="h">Module 6, and All Six at a Glance</h2>
+    <div class="cheat-grid">
+      <div class="card cheat-card"><div class="label">Spanner</div><p>Relational, SQL, global, strongly consistent, synchronous replication, 2 TB+, tens of thousands of ops/sec.</p></div>
+      <div class="card cheat-card"><div class="label">Scaling</div><p>Horizontal = add/remove servers. Vertical = one instance bigger/smaller.</p></div>
+      <div class="card cheat-card"><div class="label">Firestore</div><p>NoSQL documents (field–value, JSON-like) in collections. Indexed by default. Offline cache syncs on reconnect.</p></div>
+      <div class="card cheat-card"><div class="label">Bigtable</div><p>NoSQL big data, low latency, high throughput, billions of rows. IoT, analytics, finance.</p></div>
+      <div class="card cheat-card"><div class="label">Chart</div><p>Trans. SQL: Cloud SQL / Spanner · NoSQL: Firestore · Analytical SQL: BigQuery · NoSQL: Bigtable.</p></div>
+      <div class="card cheat-card"><div class="label">M1–M5</div><p>M1 cloud basics, M2–3 compute and apps, M4 security and IAM, M5 Cloud Storage and Cloud SQL. See each week's cheat sheet.</p></div>
+    </div>
+  </section>
+
+</div>
+
+<footer>CETE 3370 — Class 6 · Fall 2026 <br><span id="footerStatus"></span></footer>
+
+<script>
+
+function lsGet(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+function onAct(n,fn){ n.setAttribute('role','button'); n.setAttribute('tabindex','0'); n.addEventListener('click',fn); n.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); fn(); } }); }
+
+function buildFlip(container, items){
+  items.forEach(e=>{
+    const card=document.createElement('div');
+    card.className='flip-card group [perspective:1200px] cursor-pointer select-none';
+    card.setAttribute('role','button'); card.setAttribute('tabindex','0'); card.setAttribute('aria-pressed','false');
+    card.innerHTML=`
+      <div class="flip-inner grid transition-transform duration-700 [transform-style:preserve-3d]" style="transform:rotateY(0deg);">
+        <div class="col-start-1 row-start-1 [backface-visibility:hidden] flex flex-col justify-center gap-2 rounded-lg border-[1.5px] border-[#16150f] bg-[#fffdf7] p-4 min-h-[150px] shadow-[3px_3px_0_rgba(22,21,15,0.08)] transition-shadow duration-300 group-hover:shadow-[5px_5px_0_rgba(22,21,15,0.12)]">
+          <div class="font-mono text-[28px] font-bold" style="color:var(--violet); opacity:.75;">0${e.n}</div>
+          <div class="text-[15px] font-bold text-[#16150f] leading-snug">${e.title}</div>
+        </div>
+        <div class="col-start-1 row-start-1 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col justify-center rounded-lg border-[1.5px] border-[#16150f] p-4 min-h-[150px] text-[13.5px] text-[#f6f3ec]" style="background:var(--violet);">
+          <p class="leading-snug">${e.back}</p>
+        </div>
+      </div>`;
+    const inner=card.querySelector('.flip-inner');
+    function toggle(){ const f=card.getAttribute('aria-pressed')==='true'; card.setAttribute('aria-pressed',String(!f)); inner.style.transform=f?'rotateY(0deg)':'rotateY(180deg)'; }
+    card.addEventListener('click',toggle);
+    card.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); toggle(); } });
+    container.appendChild(card);
+  });
+}
+
+function buildAcc(container, items){
+  items.forEach(a=>{
+    const item=document.createElement('div');
+    item.className='acc-item';
+    item.innerHTML=`<div class="acc-head"><strong>${a.title}</strong><span class="acc-plus">+</span></div>
+      <div class="acc-body">${a.html?`<div class="acc-rich">${a.html}</div>`:`<p>${a.body}</p>`}${a.chips&&a.chips.length?`<div class="chips">${a.chips.map(c=>`<span class="tag-chip">${c}</span>`).join('')}</div>`:''}</div>`;
+    onAct(item,()=>item.classList.toggle('open'));
+    container.appendChild(item);
+  });
+}
+
+function makeTabs(tabsEl, panelEl, items, renderPanel, startId, after){
+  let active=startId||items[0].id;
+  function draw(){
+    tabsEl.innerHTML='';
+    items.forEach(it=>{
+      const b=document.createElement('div');
+      b.className='loop-tab '+(it.cls||'')+(active===it.id?' active':'');
+      b.textContent=it.label;
+      onAct(b,()=>{ active=it.id; draw(); });
+      tabsEl.appendChild(b);
+    });
+    const cur=items.find(i=>i.id===active);
+    panelEl.innerHTML=renderPanel(cur);
+    if(after) after(panelEl,cur);
+  }
+  draw();
+}
+
+function makeChecklist(o){
+  let done=lsGet(o.key,{});
+  function n(){ return Object.values(done).filter(Boolean).length; }
+  function render(){
+    o.list.innerHTML='';
+    o.steps.forEach((s,i)=>{
+      const d=!!done[i];
+      const item=document.createElement('div');
+      item.className='cmd-item'+(d?' done':'');
+      item.innerHTML=`<div class="cmd-check">${d?'✓':''}</div><p>${s.t}${s.d?`<span class="cmd-detail">${s.d}</span>`:''}</p>`;
+      item.addEventListener('click',()=>{ done[i]=!d; lsSet(o.key,done); render(); if(o.onChange) o.onChange(); });
+      o.list.appendChild(item);
+    });
+    o.count.textContent=n();
+    o.bar.style.width=(n()/o.steps.length*100)+'%';
+  }
+  o.reset.addEventListener('click',()=>{ done={}; lsSet(o.key,done); render(); if(o.onChange) o.onChange(); });
+  render();
+  return {count:n,total:o.steps.length};
+}
+
+function makeQuiz(data, container, scoreEl, resetBtn, onChange){
+  const answers={};
+  function score(){ return Object.keys(answers).filter(k=>answers[k]===data[k].correct).length; }
+  function render(){
+    container.innerHTML='';
+    data.forEach((q,qi)=>{
+      const card=document.createElement('div');
+      card.className='quiz-card';
+      const answered=answers[qi]!==undefined;
+      const mine=(answered&&q.mine!==undefined)?`<div class="quiz-mine ${q.mine===q.correct?'ok':'no'}">In class you picked: ${q.opts[q.mine]} ${q.mine===q.correct?'✓':'✗'}</div>`:'';
+      card.innerHTML=`
+        <div class="quiz-q">${qi+1}. ${q.q}</div>
+        <div class="quiz-opts">
+          ${q.opts.map((o,oi)=>{
+            let cls='quiz-opt';
+            if(answered){ if(oi===q.correct) cls+=' correct'; else if(oi===answers[qi]) cls+=' wrong'; }
+            return `<button class="${cls}" data-qi="${qi}" data-oi="${oi}" ${answered?'disabled':''}>${o}</button>`;
+          }).join('')}
+        </div>
+        <div class="quiz-why ${answered?'show':''}">${q.why}${mine?'<br>'+mine:''}</div>`;
+      container.appendChild(card);
+    });
+    container.querySelectorAll('.quiz-opt').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const qi=btn.dataset.qi;
+        if(answers[qi]!==undefined) return;
+        answers[qi]=parseInt(btn.dataset.oi);
+        render(); scoreEl.textContent=score(); onChange();
+      });
+    });
+  }
+  resetBtn.addEventListener('click',()=>{ Object.keys(answers).forEach(k=>delete answers[k]); render(); scoreEl.textContent=score(); onChange(); });
+  render(); scoreEl.textContent=score();
+  return {score};
+}
+
+// ---------- Scaling ----------
+let load=1;
+function renderScale(){
+  const h=document.getElementById('hBox'); h.innerHTML='';
+  for(let i=0;i<load;i++){ const c=document.createElement('div'); c.className='vcell'; c.textContent='Server '+(i+1); h.appendChild(c); }
+  const v=document.getElementById('vBox'); v.innerHTML='';
+  const c=document.createElement('div'); c.className='vcell'; c.style.minHeight=(30+load*14)+'px'; c.style.width=(70+load*18)+'px'; c.textContent='1 instance ('+load+'x size)'; v.appendChild(c);
+  document.getElementById('scOut').textContent='Load '+load+'x: horizontal scaling runs '+load+' server'+(load>1?'s':'')+'; vertical scaling runs one instance made '+load+'x larger. Spanner scales horizontally.';
+}
+document.getElementById('loadUp').addEventListener('click',()=>{ if(load<6) load++; renderScale(); });
+document.getElementById('loadDown').addEventListener('click',()=>{ if(load>1) load--; renderScale(); });
+document.getElementById('scReset').addEventListener('click',()=>{ load=1; renderScale(); });
+renderScale();
+
+// ---------- Replication ----------
+let zv=[1,1,1], zoff=false, lastW=-1;
+function renderZones(){
+  const box=document.getElementById('zones'); box.innerHTML='';
+  zv.forEach((v,i)=>{ const c=document.createElement('div'); c.className='vcell'+((i===0&&zoff)?' old':''); c.textContent='Zone '+(i+1)+(i===0&&zoff?' (offline)':'')+': v'+v; c.style.cursor='pointer'; onAct(c,()=>{ if(i===0&&zoff) return; const n=Math.max(...zv)+1; zv=zv.map((x,j)=>(j===0&&zoff)?x:n); lastW=i; renderZones(); }); box.appendChild(c); });
+  const live=zv.filter((x,j)=>!(j===0&&zoff));
+  document.getElementById('zOut').textContent = (zoff?'Zone 1 is offline, but users are still served from Zones 2 and 3 (v'+zv[1]+'). ':'')+(lastW>=0?'Last update written in Zone '+(lastW+1)+' and instantly copied (synchronous replication).':'All zones hold identical copies.');
+}
+document.getElementById('zOff').addEventListener('click',()=>{ zoff=!zoff; if(!zoff){ const n=Math.max(...zv); zv=zv.map(()=>n); } renderZones(); });
+renderZones();
+
+// ---------- Firestore ----------
+const docs=[
+ {id:"s1",label:"student_1",d:{studentId:1,name:"Ana",major:"CSEC",gpa:3.8}},
+ {id:"s2",label:"student_2",d:{studentId:2,name:"Ben",major:"IT",tags:["night","online"]}},
+ {id:"s3",label:"student_3",d:{studentId:3,name:"Cy"}}
+];
+makeTabs(document.getElementById('docTabs'),document.getElementById('docPanel'),docs,d=>d.label+' {\n'+Object.entries(d.d).map(([k,v])=>'  '+k+': '+JSON.stringify(v)).join(',\n')+'\n}\n\nSame collection, different fields: flexible, no fixed columns.','s1');
+let fsOn=true, fsLocal=0, fsCloud=0;
+function renderFs(){
+  document.getElementById('fsNet').textContent='Device: '+(fsOn?'ONLINE':'OFFLINE');
+  const b=document.getElementById('fsBox'); b.innerHTML='';
+  [['Device cache','v'+fsLocal],['Firestore (cloud)','v'+fsCloud]].forEach(x=>{ const c=document.createElement('div'); c.className='vcell'; c.textContent=x[0]+': '+x[1]; b.appendChild(c); });
+  document.getElementById('fsOut').textContent = fsLocal===fsCloud ? 'In sync.' : 'Offline: the app still writes and reads the cached copy. Reconnect and the local changes synchronize to Firestore.';
+}
+document.getElementById('fsNet').addEventListener('click',()=>{ fsOn=!fsOn; if(fsOn) fsCloud=fsLocal; renderFs(); });
+document.getElementById('fsWrite').addEventListener('click',()=>{ fsLocal++; if(fsOn) fsCloud=fsLocal; renderFs(); });
+document.getElementById('fsReset').addEventListener('click',()=>{ fsOn=true; fsLocal=0; fsCloud=0; renderFs(); });
+renderFs();
+
+// ---------- Which service ----------
+const pickItems=[
+ ["Photos and videos for a website","Cloud Storage"],
+ ["Relational app, one region, MySQL","Cloud SQL"],
+ ["Relational, transactions, global scale","Cloud Spanner"],
+ ["Mobile app with offline sync","Firestore"],
+ ["Billions of IoT sensor readings, low latency","Bigtable"],
+ ["SQL data warehouse for analytics","BigQuery"]
+];
+const svc=["Cloud Storage","Cloud SQL","Cloud Spanner","Firestore","Bigtable","BigQuery"];
+const pickState={};
+function renderPick(){
+  const box=document.getElementById('pick'); box.innerHTML='';
+  pickItems.forEach((it,i)=>{
+    const r=document.createElement('div'); const st=pickState[i];
+    r.className='sort-row'+(st?(st===it[1]?' ok':' no'):'');
+    const l=document.createElement('span'); l.textContent=it[0]; r.appendChild(l);
+    const g=document.createElement('span'); g.style.cssText='display:flex;gap:4px;flex-wrap:wrap';
+    svc.forEach(s=>{ const b=document.createElement('button'); b.className='ghost-btn'; b.textContent=s; onAct(b,()=>{ pickState[i]=s; renderPick(); }); g.appendChild(b); });
+    r.appendChild(g); box.appendChild(r);
+  });
+  const d=Object.keys(pickState).length, ok=pickItems.filter((it,i)=>pickState[i]===it[1]).length;
+  document.getElementById('pickOut').textContent = d<pickItems.length ? d+'/'+pickItems.length+' answered' : ok+'/'+pickItems.length+' correct.';
+}
+renderPick();
+
+const labSteps=[
+ {t:"Create a provisioned Spanner instance (test-instance, Enterprise, regional)",d:""},
+ {t:"Create the exampleDB database (screenshot, task 2)",d:""},
+ {t:"Create the Singers table and view its schema (screenshot, task 3)",d:""},
+ {t:"Insert rows, edit one, delete one, insert your own row, SELECT * (screenshot, task 4)",d:""},
+ {t:"Test your knowledge (task 5)",d:""}
+];
+const kcData=[
+ {q:"An online retailer needs a relational database with transactions, joins, and customers on three continents. Which service?",opts:["Cloud SQL","Cloud Spanner","Firestore","Cloud Storage"],correct:1,why:"Relational + transactional + global scalability = Cloud Spanner."},
+ {q:"A small internal app needs managed MySQL in a single region. Which service?",opts:["Cloud Spanner","Bigtable","Cloud SQL","BigQuery"],correct:2,why:"Transactional SQL with local/regional scale = Cloud SQL."},
+ {q:"A mobile app must keep working on a train with no signal and sync later. Which service?",opts:["Bigtable","Firestore","Cloud SQL","Archive storage"],correct:1,why:"Firestore caches data offline and synchronizes on reconnect."},
+ {q:"You want to retrieve all documents in a collection and sort them. Which database fits?",opts:["Firestore","Cloud Spanner","Cloud SQL","Cloud Storage"],correct:0,why:"Firestore NoSQL queries can retrieve documents or whole collections with filtering and sorting."},
+ {q:"A database grows past 2 TB with tens of thousands of reads/writes per second and needs SQL. Which?",opts:["Cloud SQL","Firestore","Cloud Spanner","Archive"],correct:2,why:"Spanner: 2 TB+, very high IOPS, SQL, strong consistency."},
+ {q:"True or false: horizontal scaling means making one server bigger.",opts:["True","False"],correct:1,why:"False. That's vertical scaling. Horizontal adds or removes servers."},
+ {q:"A financial analytics firm needs NoSQL with huge throughput and low latency. Which?",opts:["Bigtable","Cloud SQL","Firestore","Cloud Storage"],correct:0,why:"Bigtable: massive workloads, high throughput, low latency; financial data analysis is a named use."},
+ {q:"True or false: in Firestore, a document is like a table and a collection is like a record.",opts:["True","False"],correct:1,why:"False. A document is like a record; a collection is like a table."}
+];
+
+const slideNotes = [{"title": "Module overview and agenda (slides 1\u20134, 11, 18)", "html": "<ul><li><strong>Module 6: Storage \u2013 Part 2.</strong> Cloud Spanner as a SQL managed service \u00b7 Firestore, a NoSQL document store \u00b7 Bigtable as a NoSQL option \u00b7 hands-on labs (Cloud Spanner: Qwik Start) \u00b7 knowledge check.</li><li>Same four objectives as Part 1: explore Google Cloud storage options; differentiate structured and unstructured storage; use Cloud Storage for unstructured data; explore SQL relational vs NoSQL use cases and the options in Google Cloud.</li><li>The 12-item agenda repeats between sections: storage options \u00b7 structured vs unstructured \u00b7 Cloud Storage (lab: CLI/SDK) \u00b7 SQL managed services \u00b7 Cloud SQL (lab) \u00b7 <strong>Cloud Spanner and lab</strong> \u00b7 NoSQL options \u00b7 <strong>Firestore and lab</strong> \u00b7 <strong>Bigtable and lab</strong> \u00b7 knowledge check.</li></ul>"}, {"title": "Database and storage services; the decision chart (slides 5\u20136)", "html": "<p>Relational: Cloud SQL, Cloud Spanner. NoSQL: Firestore, Bigtable. Comparison link: cloud.google.com/free/docs/aws-azure-gcp-service-comparison.</p><ul><li><strong>Chart:</strong> structured or unstructured \u2192 transactional or analytical workload \u2192 local/regional or global scalability.</li><li><strong>Transactional:</strong> SQL \u2192 Cloud SQL (local/regional) or Cloud Spanner (global); NoSQL \u2192 Firestore.</li><li><strong>Analytical:</strong> SQL \u2192 BigQuery; NoSQL \u2192 Cloud Bigtable.</li><li>Class: BigQuery will matter later for machine learning / AI tasks. Bigtable is often also used for transactional NoSQL.</li><li>AWS/Azure analogues named in class: Aurora, DynamoDB, Keyspaces, Neptune, Azure SQL Database, Azure Cosmos DB (slight differences, same general concept).</li></ul>"}, {"title": "Cloud Spanner: the three claims (slide 7)", "html": "<ul><li><strong>Cloud Spanner is a fully managed relational database.</strong> It <strong>scales horizontally</strong>, is <strong>strongly consistent</strong>, and <strong>speaks SQL</strong>.</li><li><strong>Horizontal scaling:</strong> scale by adding and removing servers (class: adding <em>or removing</em>, as load rises and falls).</li><li><strong>Vertical scaling:</strong> make a single instance larger or smaller.</li><li><strong>Strong consistency:</strong> a read operation returns the value of the most recent completed write; copies of the data in a distributed system are kept up-to-date and identical.</li></ul>"}, {"title": "What Cloud Spanner is especially suited for (slide 8)", "html": "<p>Applications that require:</p><ul><li>A SQL relational database management system with <strong>joins and secondary indexes</strong></li><li><strong>Built-in high availability</strong>: continuous access with minimal or zero downtime</li><li><strong>Strong global consistency</strong></li><li><strong>Database sizes that exceed 2 TB</strong></li><li><strong>High numbers of input/output operations per second</strong>: tens of thousands of reads/writes per second or more.</li></ul>"}, {"title": "How Cloud Spanner works: synchronous replication (slide 9)", "html": "<ul><li>Diagram: Zone 1, Zone 2, Zone 3 with an <strong>update</strong> arrow into one zone.</li><li><strong>Synchronous replication:</strong> data is automatically and instantly copied across regions/zones.</li><li><em>Speaker note:</em> if one zone goes offline, a user's data can still be served from another.</li><li>Class: an update in zone 2 is instantly copied, so an application reading in zone 3 still sees the updated data.</li></ul>"}, {"title": "Lab: Cloud Spanner Qwik Start (slide 10)", "html": "<ul><li>Create a Cloud Spanner instance \u00b7 create a database and schema \u00b7 insert and modify data.</li><li>In class: provisioned instance <code>test-instance</code> (Enterprise edition, regional, us-east1, default compute capacity), database <code>exampleDB</code>, table <code>Singers</code> created with SQL, then insert, edit, delete and select rows.</li></ul>"}, {"title": "Firestore: ideal for mobile and web (slides 12\u201313)", "html": "<ul><li><strong>Firestore is ideal for mobile and web development.</strong> NoSQL cloud database, <strong>flexible</strong> (change to meet a revised set of data needs), <strong>scales horizontally</strong>.</li><li>NoSQL managed services section lists Firestore and Bigtable as the NoSQL databases.</li></ul>"}, {"title": "Firestore documents and collections (slide 14)", "html": "<ul><li>Firestore stores data as <strong>documents</strong>; documents are grouped into a <strong>collection</strong>.</li><li><em>Speaker note:</em> each document contains field\u2013value pairs, similar to a JSON object. <strong>A document is a data record. A collection is like a table.</strong></li></ul>"}, {"title": "Firestore queries (slide 15)", "html": "<ul><li>NoSQL queries connect apps with data.</li><li>Can combine <strong>filtering and sorting</strong> options.</li><li><strong>Indexed by default.</strong></li><li>Retrieve all the documents in a collection, or individual documents.</li><li><em>Speaker note:</em> query performance is proportional to the size of the result set; speed or efficiency changes with data volume or query complexity.</li></ul>"}, {"title": "Firestore online/offline synchronization (slide 16)", "html": "<ul><li>Operations: <strong>write, read, listen, query</strong>, on or offline.</li><li>On a connected device, Firestore <strong>caches data that an app is using</strong>, so the app can write, read, listen to, and query data even if the device is offline.</li><li><strong>When the device comes back online, it synchronizes any local changes back to Firestore.</strong></li><li>Firestore Qwik Start (slide 17) is practice only, not an assignment: set up Firestore, write database import code, create test data, import/inspect/update data.</li></ul>"}, {"title": "Bigtable (slides 19\u201320)", "html": "<ul><li><strong>Google's NoSQL big data database service.</strong> Handles massive workloads; consistent low latency; high throughput; for operational and analytical applications.</li><li>Great choice for: the database that powers many core Google services (Search, Analytics, Maps, Gmail), plus <strong>Internet of Things, user analytics, and financial data analysis</strong>.</li><li><strong>Fast and performant:</strong> high performance under high loads, low latency.</li><li><strong>Seamless scaling and replication:</strong> billions of rows and thousands of columns; no downtime during reconfiguration; replication adds high availability.</li><li><strong>Fully managed:</strong> configuration and tuning handled by Google; backups for disaster recovery.</li><li><strong>Integrated and secure:</strong> integrated with open-source big data tools (class: Hadoop and similar).</li></ul>"}];
+const scData = [{"q": "Cloud Spanner is described on the slide as:", "opts": ["A fully managed relational database", "A NoSQL document store", "An object storage service", "A data warehouse for ML"], "correct": 0, "why": "Fully managed relational database that scales horizontally, is strongly consistent, and speaks SQL."}, {"q": "What is vertical scaling?", "opts": ["Adding and removing servers", "Making a single instance larger or smaller", "Copying data across zones", "Indexing every document"], "correct": 1, "why": "Vertical = one instance bigger or smaller. Horizontal = add/remove servers."}, {"q": "Strong consistency means a read operation returns:", "opts": ["A cached copy from last week", "The value of the most recent completed write", "A random replica's value", "Only the first write"], "correct": 1, "why": "A read returns the value of the recent completed write; copies in a distributed system are kept up-to-date and identical."}, {"q": "Which database size does the slide say suits Cloud Spanner?", "opts": ["Under 1 GB", "Exceeding 2 TB", "Exactly 64 TB", "Only archives"], "correct": 1, "why": "Database sizes that exceed 2 TB, with very high IOPS."}, {"q": "Synchronous replication in Spanner means data is:", "opts": ["Backed up weekly", "Instantly copied across zones/regions", "Only stored in one zone", "Encrypted client-side"], "correct": 1, "why": "Data is automatically and instantly copied, so if a zone goes offline another can serve it."}, {"q": "In Firestore, a collection is most like:", "opts": ["A row", "A column", "A table", "A bucket"], "correct": 2, "why": "A document is like a record; a collection is like a table."}, {"q": "Each Firestore document contains:", "opts": ["Field\u2013value pairs, like a JSON object", "Only binary files", "Rows with a fixed schema", "SQL joins"], "correct": 0, "why": "Documents hold field\u2013value pairs similar to a JSON object."}, {"q": "What happens when an offline Firestore device reconnects?", "opts": ["Local changes are discarded", "Local changes synchronize back to Firestore", "The app must re-create the database", "Changes go to Cloud SQL"], "correct": 1, "why": "It synchronizes any local changes back to Firestore."}, {"q": "Which service powers Google Search, Maps and Gmail and suits IoT and financial analysis?", "opts": ["Cloud SQL", "Firestore", "Bigtable", "Cloud Storage"], "correct": 2, "why": "Bigtable: massive workloads, low latency, high throughput; IoT, user analytics, financial data analysis."}];
+buildAcc(document.getElementById('slideNotes'), slideNotes);
+const sc = makeQuiz(scData, document.getElementById('sc_container'), document.getElementById('sc_score'), document.getElementById('sc_reset'), ()=>updateFooter());
+// ---------- Checklist + quiz ----------
+const lab = makeChecklist({list:document.getElementById('lab_list'), count:document.getElementById('lab_count'), bar:document.getElementById('lab_bar'), reset:document.getElementById('lab_reset'), steps:labSteps, key:'cloud-w6-lab', onChange:()=>updateFooter()});
+const kc = makeQuiz(kcData, document.getElementById('kc_container'), document.getElementById('kc_score'), document.getElementById('kc_reset'), ()=>updateFooter());
+
+function updateFooter(){
+  document.getElementById('footerStatus').textContent=`${lab.count()}/${lab.total} lab steps · ${kc.score()}/${kcData.length} on the knowledge check · ${sc.score()}/${scData.length} on the slide check`;
+}
+updateFooter();
+</script>
+</body>
+</html>

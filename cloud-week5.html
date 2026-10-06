@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CETE 3370 · Class 05 · Storage Options, Part 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --bg:#f6f3ec;
+    --ink:#16150f;
+    --sub:#454236;
+    --muted:#6a6656;
+    --line:#cfc9b6;
+    --card:#fffdf7;
+    --red:oklch(0.53 0.19 25);
+    --red-soft:oklch(0.94 0.045 25);
+    --blue:oklch(0.46 0.14 255);
+    --blue-soft:oklch(0.93 0.03 255);
+    --violet:oklch(0.48 0.15 300);
+    --violet-soft:oklch(0.94 0.035 300);
+    --good:oklch(0.58 0.14 150);
+    --good-soft:oklch(0.94 0.05 150);
+    --bad:oklch(0.55 0.18 25);
+    --bad-soft:oklch(0.94 0.06 25);
+    --amber:oklch(0.72 0.15 75);
+    --amber-soft:oklch(0.95 0.05 75);
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'Space Grotesk', Helvetica, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.5; padding-bottom:60px;}
+  .wrap{max-width:920px; margin:0 auto; padding:0 20px;}
+  header.hero{
+    border-bottom:3px solid var(--ink);
+    padding:34px 20px 26px;
+    background:repeating-linear-gradient(135deg, transparent, transparent 26px, rgba(22,21,15,0.03) 26px, rgba(22,21,15,0.03) 27px);
+  }
+  .kicker{font-family:var(--mono); font-size:12.5px; letter-spacing:.06em; color:var(--sub); text-transform:uppercase; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .kicker .dot{color:var(--muted);}
+  h1.title{font-size:clamp(28px,5vw,44px); line-height:1.05; margin:10px 0 6px; font-weight:700; letter-spacing:-0.01em;}
+  .subtitle{color:var(--sub); font-size:16px; max-width:620px;}
+  .prompt{font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:16px;}
+  .backlink{font-family:var(--mono); font-size:12px; color:var(--muted); text-decoration:none; display:inline-block; margin-bottom:12px;}
+  .backlink:hover{color:var(--violet);}
+
+  .badge{display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:3px 10px; border:1.5px solid var(--ink); border-radius:3px; margin-bottom:10px;}
+  .badge.risk{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .badge.red{background:var(--red-soft); border-color:var(--red); color:var(--red);}
+  .badge.blue{background:var(--blue-soft); border-color:var(--blue); color:var(--blue);}
+  .badge.plain{background:var(--card);}
+
+  section{padding:36px 0; border-bottom:1.5px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2.h{font-size:26px; font-weight:700; margin:0 0 6px; letter-spacing:-0.01em;}
+  .lede{color:var(--sub); margin-bottom:20px; max-width:640px;}
+
+  .card{background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:18px 20px; box-shadow:3px 3px 0 rgba(22,21,15,0.08);}
+  ul.tight{margin:8px 0; padding-left:20px;}
+  ul.tight li{margin-bottom:5px;}
+
+  /* Housekeeping */
+  .house-grid{display:grid; gap:12px;}
+  .house-item{background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:14px 16px; display:flex; gap:14px; align-items:flex-start;}
+  .house-item .tag{font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.05em; background:var(--amber-soft); border:1.5px solid var(--ink); border-radius:5px; padding:2px 8px; white-space:nowrap; flex-shrink:0; margin-top:2px;}
+  .house-item a{color:var(--blue); word-break:break-all;}
+
+  /* NIST quote */
+  .nist{border-left:5px solid var(--violet);}
+  .nist blockquote{margin:0 0 12px; font-size:15.5px; color:var(--ink);}
+  .nist mark{background:var(--amber-soft); border-bottom:2px solid var(--amber); padding:0 2px; color:inherit;}
+  .nist-counts{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-top:14px;}
+  .nist-count{border:1.5px solid var(--line); border-radius:7px; background:var(--bg); padding:10px 12px; text-align:center;}
+  .nist-count b{display:block; font-family:var(--mono); font-size:28px; color:var(--violet);}
+  .nist-count span{font-size:12.5px; color:var(--sub);}
+
+  /* Tabs */
+  .loop-tabs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;}
+  .loop-tab{font-family:var(--mono); font-size:12.5px; font-weight:600; border:1.5px solid var(--ink); border-radius:6px; background:var(--card); padding:8px 14px; cursor:pointer; transition:all .15s;}
+  .loop-tab.active{background:var(--violet); color:var(--bg); border-color:var(--violet);}
+  .loop-tab:hover:not(.active){background:var(--violet-soft);}
+  .loop-tab.t-red.active{background:var(--red); border-color:var(--red);}
+  .loop-tab.t-blue.active{background:var(--blue); border-color:var(--blue);}
+  .loop-tab.t-good.active{background:var(--good); border-color:var(--good);}
+  .loop-tab.t-amber.active{background:var(--amber); border-color:var(--amber); color:var(--ink);}
+  .tag-chip{font-family:var(--mono); font-size:11.5px; padding:4px 10px; border:1.5px solid var(--line); border-radius:999px; color:var(--sub); background:var(--bg);}
+
+  /* Responsibility stack */
+  .stack{display:flex; flex-direction:column; gap:4px; margin:14px 0;}
+  .layer{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 12px; border:1.5px solid var(--ink); border-radius:5px; font-size:13.5px; font-weight:600; transition:background .2s;}
+  .layer small{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; font-weight:700;}
+  .layer.you{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .layer.them{background:var(--bg); border-color:var(--line); color:var(--muted);}
+  .ex-row{display:flex; justify-content:space-between; gap:12px; font-size:14px; padding:8px 0; border-top:1px dashed var(--line);}
+  .ex-row strong{color:var(--blue); flex-shrink:0;}
+  .ex-row span{text-align:right;}
+
+  /* Accordion */
+  .acc-item{border:1.5px solid var(--ink); border-radius:8px; background:var(--card); padding:14px 16px; cursor:pointer; margin-bottom:10px; transition:box-shadow .15s;}
+  .acc-item:hover{box-shadow:3px 3px 0 rgba(22,21,15,0.08);}
+  .acc-head{display:flex; justify-content:space-between; align-items:center; gap:10px;}
+  .acc-head strong{font-size:15.5px;}
+  .acc-plus{font-family:var(--mono); font-size:18px; color:var(--violet); flex-shrink:0; transition:transform .2s;}
+  .acc-item.open .acc-plus{transform:rotate(45deg);}
+  .acc-body{max-height:0; overflow:hidden; transition:max-height .25s ease;}
+  .acc-item.open .acc-body{max-height:320px;}
+  .acc-body p{font-size:14px; color:var(--sub); margin:10px 0 0; padding-top:10px; border-top:1px dashed var(--line);}
+  .acc-body .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;}
+
+  /* Stats */
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px;}
+  .stat .big{font-family:var(--mono); font-size:34px; font-weight:700; color:var(--blue); line-height:1.1;}
+  .stat .lbl{font-size:13px; color:var(--sub); margin-top:4px;}
+
+  /* Zone demo */
+  .zone-wrap{display:grid; gap:12px;}
+  .region-box{border:1.5px dashed var(--ink); border-radius:10px; padding:14px; background:var(--card);}
+  .region-name{font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.05em; margin-bottom:10px;}
+  .zones{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px;}
+  .zone{border:1.5px solid var(--ink); border-radius:8px; padding:12px; background:var(--good-soft); cursor:pointer; transition:all .2s; user-select:none;}
+  .zone:hover{box-shadow:3px 3px 0 rgba(22,21,15,0.1);}
+  .zone .zn{font-family:var(--mono); font-size:12.5px; font-weight:700;}
+  .zone .vm{margin-top:8px; font-size:13px; border:1.5px solid var(--good); background:var(--bg); border-radius:5px; padding:6px 8px;}
+  .zone.down{background:var(--bad-soft); border-color:var(--bad); opacity:.85;}
+  .zone.down .vm{border-color:var(--bad); text-decoration:line-through; color:var(--muted);}
+  .zone-status{margin-top:12px; font-size:14px; padding:10px 14px; border-radius:6px; border:1.5px solid var(--ink); background:var(--good-soft); font-weight:600;}
+  .zone-status.warn{background:var(--amber-soft);}
+  .zone-status.bad{background:var(--bad-soft);}
+
+  /* Checklist */
+  .cmd-status{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:14px 18px; margin-bottom:14px;}
+  .cmd-count{font-family:var(--mono); font-size:24px; color:var(--violet); font-weight:700;}
+  .cmd-bar-track{flex:1; min-width:140px; height:8px; background:var(--line); border-radius:999px; overflow:hidden;}
+  .cmd-bar-fill{height:100%; width:0%; background:var(--violet); border-radius:999px; transition:width .35s;}
+  .ghost-btn{font-family:var(--mono); font-size:11.5px; letter-spacing:.05em; text-transform:uppercase; padding:7px 13px; background:var(--bg); border:1.5px solid var(--ink); border-radius:999px; color:var(--ink); cursor:pointer;}
+  .ghost-btn:hover{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .cmd-item{display:flex; align-items:flex-start; gap:12px; padding:12px 14px; background:var(--card); border:1.5px solid var(--line); border-radius:7px; cursor:pointer; transition:opacity .2s, border-color .2s; margin-bottom:8px;}
+  .cmd-item.done{opacity:0.55; border-color:var(--good);}
+  .cmd-check{flex-shrink:0; width:22px; height:22px; border-radius:5px; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:13px; color:var(--bg); margin-top:1px; background:var(--bg);}
+  .cmd-item.done .cmd-check{background:var(--good); border-color:var(--good);}
+  .cmd-item p{margin:0; font-size:14.5px;}
+  .cmd-callout{margin-top:14px; background:var(--amber-soft); border:1.5px solid var(--ink); border-left:4px solid var(--amber); border-radius:6px; padding:14px 16px; font-size:13.5px; line-height:1.5; color:var(--sub);}
+
+  /* Cheat sheet */
+  .cheat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px;}
+  .cheat-card .label{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--violet); margin-bottom:6px;}
+  .cheat-card p{font-size:13.5px; line-height:1.45; margin:0; color:var(--sub);}
+
+  /* Quiz */
+  .quiz-card{border:1.5px solid var(--ink); border-radius:8px; padding:16px; background:var(--card); margin-bottom:14px;}
+  .quiz-q{font-weight:600; margin-bottom:10px;}
+  .quiz-opts{display:flex; flex-direction:column; gap:8px;}
+  .quiz-opt{text-align:left; padding:9px 12px; border:1.5px solid var(--line); border-radius:6px; background:var(--bg); cursor:pointer; font-family:var(--sans); font-size:14px; transition:all .15s; color:var(--ink);}
+  .quiz-opt:hover:not(:disabled){border-color:var(--violet);}
+  .quiz-opt.correct{background:var(--good-soft); border-color:var(--good); font-weight:700;}
+  .quiz-opt.wrong{background:var(--bad-soft); border-color:var(--bad);}
+  .quiz-why{display:none; margin-top:10px; font-size:13px; color:var(--sub); border-top:1px dashed var(--line); padding-top:10px;}
+  .quiz-why.show{display:block;}
+  .quizbar{position:sticky; bottom:0; background:var(--ink); color:var(--bg); border-radius:8px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); margin-top:6px;}
+  .quizbar button{font-family:var(--mono); background:var(--bg); color:var(--ink); border:none; border-radius:5px; padding:7px 14px; cursor:pointer; font-weight:700;}
+
+  .quiz-mine{font-family:var(--mono); font-size:11.5px; display:inline-block; margin-top:10px; padding:2px 10px; border-radius:999px; border:1.5px solid;}
+  .quiz-mine.ok{border-color:var(--good); background:var(--good-soft);}
+  .quiz-mine.no{border-color:var(--bad); background:var(--bad-soft);}
+  .pair-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-top:16px;}
+  .pair-card .label{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--red); margin-bottom:6px;}
+  .pair-card p{font-size:13.5px; margin:4px 0; color:var(--sub);}
+
+  footer{text-align:center; font-family:var(--mono); font-size:12px; color:var(--muted); padding:30px 20px 0;}
+  #footerStatus{color:var(--violet); font-weight:600;}
+
+  .flip-inner{transition-timing-function:cubic-bezier(.34,1.56,.64,1);}
+  .flip-card:active .flip-inner{transform:scale(0.97) !important;}
+
+  code{font-family:var(--mono); font-size:12.5px; background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:1px 5px; color:var(--ink);}
+  .scroll-x{overflow-x:auto;}
+  table.cmp{width:100%; border-collapse:collapse; font-size:14px; background:var(--card); border:1.5px solid var(--ink);}
+  .cmp th,.cmp td{padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top;}
+  .cmp th{font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; background:var(--violet-soft); color:var(--violet);}
+  .cmp td:first-child{font-weight:700;}
+  .cmp tr:last-child td{border-bottom:none;}
+  .acc-item.open .acc-body{max-height:900px;}
+  .acc-rich{font-size:14px; color:var(--sub); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);}
+  .acc-rich p{margin:0 0 8px;}
+  .acc-rich ul{margin:6px 0 8px; padding-left:20px;}
+  .acc-rich li{margin-bottom:5px;}
+  .acc-rich blockquote{margin:0 0 8px; padding-left:12px; border-left:3px solid var(--violet);}
+
+  code{font-family:var(--mono); font-size:12.5px; background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:1px 5px; color:var(--ink);}
+  .cmd-detail{display:block; font-size:12.5px; color:var(--muted); margin-top:3px;}
+  .acc-item.open .acc-body{max-height:900px;}
+  .acc-rich{font-size:14px; color:var(--sub); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);}
+  .acc-rich p{margin:0 0 8px;}
+  .acc-rich ul{margin:6px 0 8px; padding-left:20px;}
+  .acc-rich li{margin-bottom:5px;}
+  .acc-rich blockquote{margin:0 0 8px; padding-left:12px; border-left:3px solid var(--violet);}
+  .acc-body ul{margin:8px 0 0; padding-left:20px; font-size:14px; color:var(--sub);}
+  .acc-body li{margin-bottom:4px;}
+  .grid-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px;}
+  .mini h3{font-size:16px; margin:0 0 4px;}
+  .mini p{font-size:13.5px; color:var(--sub); margin:6px 0 0;}
+  .mini .tag-chip{display:inline-block;}
+  .scroll-x{overflow-x:auto;}
+  table.cmp{width:100%; border-collapse:collapse; font-size:14px; background:var(--card); border:1.5px solid var(--ink); border-radius:8px;}
+  .cmp th,.cmp td{padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top;}
+  .cmp th{font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; background:var(--violet-soft); color:var(--violet);}
+  .cmp td:first-child{font-weight:700;}
+  .cmp tr:last-child td{border-bottom:none;}
+  .spec{display:flex; align-items:center; gap:0; margin:0 0 16px;}
+  .spec .dotp{width:14px; height:14px; border-radius:50%; border:1.5px solid var(--ink); background:var(--bg); flex-shrink:0;}
+  .spec .dotp.on{background:var(--violet); border-color:var(--violet); transform:scale(1.35);}
+  .spec .seg{flex:1; height:2px; background:var(--line);}
+  .spec-lbl{display:flex; justify-content:space-between; font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px;}
+  .sim-top{display:flex; flex-direction:column; gap:6px;}
+  .sim-top input[type=range]{width:100%; accent-color:var(--violet);}
+  .sim-meta{font-size:14px; color:var(--sub); margin-top:8px;}
+  .sim-meta b{font-family:var(--mono); color:var(--ink);}
+  .sim-bars{display:flex; gap:6px; align-items:flex-end; height:150px; margin:14px 0 10px;}
+  .sim-bar{flex:1; min-width:16px; max-width:64px; height:100%; border:1.5px solid var(--ink); border-radius:4px 4px 0 0; background:var(--bg); display:flex; align-items:flex-end; overflow:hidden;}
+  .sim-fill{width:100%; transition:height .25s, background .25s;}
+  .steps-list{font-family:var(--mono); font-size:12.5px; color:var(--sub); border-top:1px dashed var(--line); padding-top:10px; display:flex; flex-direction:column; gap:4px;}
+  .steps-list .hd{font-family:var(--sans); font-size:14px; font-weight:700; color:var(--ink); margin-bottom:4px;}
+  .layer.goog{background:var(--blue-soft); border-color:var(--blue); color:var(--blue);}
+  .layer.cust{background:var(--amber-soft); border-color:var(--amber); color:var(--ink);}
+  .meter{display:flex; gap:4px; margin:2px 0 8px;}
+  .meter i{width:26px; height:10px; border:1.5px solid var(--ink); border-radius:3px; background:var(--bg);}
+  .meter i.on{background:var(--violet); border-color:var(--violet);}
+  .tree{font-family:var(--mono); font-size:13px; display:flex; flex-direction:column; gap:5px; margin:10px 0;}
+  .tnode{border:1.5px solid var(--line); border-radius:6px; padding:6px 10px; background:var(--card); cursor:pointer; user-select:none; transition:all .15s;}
+  .tnode.hit{background:var(--violet-soft); border-color:var(--violet); color:var(--violet); font-weight:700;}
+  .tnode.sel{background:var(--violet); border-color:var(--violet); color:var(--bg); font-weight:700;}
+  .perm{font-family:var(--mono); font-size:12px; padding:5px 10px; border:1.5px solid var(--line); border-radius:999px; background:var(--bg); cursor:pointer; user-select:none;}
+  .perm.on{background:var(--good-soft); border-color:var(--good); font-weight:700;}
+  .sorter{display:flex; flex-direction:column; gap:8px;}
+  .sort-row{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; border:1.5px solid var(--line); border-radius:7px; padding:8px 12px; background:var(--card);}
+  .sort-row.ok{border-color:var(--good); background:var(--good-soft);}
+  .sort-row.no{border-color:var(--bad); background:var(--bad-soft);}
+  .vers{display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:8px; margin:10px 0;}
+  .vcell{border:1.5px solid var(--ink); border-radius:6px; padding:8px; text-align:center; font-family:var(--mono); font-size:12px; background:var(--blue-soft);}
+  .vcell.old{opacity:.5; background:var(--bg);}
+  .vm{}
+  .vmgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:6px;}
+  .vbox{display:flex; flex-direction:column; gap:3px;}
+  .vl{border:1.5px solid var(--ink); border-radius:5px; padding:7px 8px; font-size:12.5px; font-weight:600; text-align:center;}
+  .vl.app{background:var(--blue-soft); border-color:var(--blue); color:var(--blue);}
+  .vl.lib{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .vl.os{background:var(--amber-soft);}
+  .vl.base{background:var(--bg); border-color:var(--line); color:var(--muted); margin-bottom:3px;}
+  .k8s{border:1.5px dashed var(--ink); border-radius:10px; padding:14px; background:var(--card);}
+  .k8s-nodes{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:10px 0;}
+  .k8s-node{border:1.5px solid var(--ink); border-radius:8px; padding:10px; background:var(--blue-soft); cursor:pointer; user-select:none;}
+  .k8s-node .nn{font-family:var(--mono); font-size:11.5px; font-weight:700; margin-bottom:6px;}
+  .k8s-c{display:inline-block; font-size:11.5px; font-family:var(--mono); background:var(--card); border:1.5px solid var(--violet); color:var(--violet); border-radius:4px; padding:2px 6px; margin:2px 3px 2px 0;}
+  .ev-steps{display:flex; flex-direction:column; gap:6px; margin-top:12px;}
+  .ev-step{border:1.5px solid var(--line); border-radius:6px; padding:8px 12px; font-size:14px; background:var(--bg); opacity:0; transform:translateY(4px); transition:all .25s;}
+  .ev-step.show{opacity:1; transform:none; border-color:var(--violet); background:var(--violet-soft);}
+  .tl{display:grid; grid-template-columns:repeat(12,1fr); gap:3px; margin:6px 0 12px;}
+  .tl .slot{height:34px; border:1.5px solid var(--ink); border-radius:4px; background:var(--bg); cursor:pointer;}
+  .tl .slot.on{background:var(--violet);}
+  .tl.vm .slot{background:var(--amber); cursor:default;}
+  .tl-label{font-family:var(--mono); font-size:11.5px; letter-spacing:.04em; color:var(--sub);}
+  .flow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:12px 0;}
+  .flow .node{border:1.5px solid var(--ink); border-radius:6px; padding:8px 12px; font-size:13px; font-weight:600; background:var(--card);}
+  .flow .arr{font-family:var(--mono); color:var(--muted);}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <a class="backlink" href="index.html">← Class Notes index</a>
+    <div class="kicker">CETE 3370 <span class="dot">·</span> CLOUD COMPUTING <span class="dot">·</span> CLASS 05 <span class="dot">·</span> Module 5</div>
+    <h1 class="title">Storage Options, Part 1</h1>
+    <p class="subtitle">From September 22 — structured vs unstructured data, Cloud Storage buckets and classes, versioning, Cloud SQL, and the chart for choosing the right storage service.</p>
+    <div class="prompt">lvasq@tamusa:~/cloud-computing#</div>
+  </div>
+</header>
+<div class="wrap">
+
+  <section>
+    <span class="badge plain">📌 Admin</span>
+    <h2 class="h">Schedule and Labs</h2>
+    <div class="house-grid">
+      <div class="house-item"><span class="tag">LAB 4</span><div><strong>Cloud Storage and Cloud SQL activities</strong>, due the following Monday. Cloud Storage: create a bucket, upload an image, make it public, manage folders and files. Cloud SQL: create an instance and connect with the mysql client.</div></div>
+      <div class="house-item"><span class="tag">NEXT</span><div>Part 2 is the next Tuesday: Firestore, Bigtable and the other options.</div></div>
+      <div class="house-item"><span class="tag">MIDTERM</span><div>Tuesday, October 6. Covers Modules 1–6 and is expected to follow the format of the chapter knowledge checks. <em>(That format was asked about in class, not confirmed in the summary.)</em></div></div>
+      <div class="house-item"><span class="tag">NOTE</span><div>The syllabus lists Week 5 as IAM, but this class's content was storage. The notes follow the class content.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="badge risk">The Landscape</span>
+    <h2 class="h">Google Cloud Storage and Database Services</h2>
+    <div class="grid-cards">
+      <div class="card mini"><h3>Relational (SQL)</h3><p><strong>Cloud SQL</strong> and <strong>Cloud Spanner</strong>.</p></div>
+      <div class="card mini"><h3>NoSQL</h3><p><strong>Firestore</strong> and <strong>Bigtable</strong>.</p></div>
+      <div class="card mini"><h3>Object storage</h3><p><strong>Cloud Storage</strong>, worldwide.</p></div>
+      <div class="card mini"><h3>Analytics</h3><p><strong>BigQuery</strong>, the SQL data warehouse.</p></div>
+    </div>
+    <p style="font-size:14px; color:var(--sub);">Choosing the right option depends on the data type to be stored and the business need. Rough equivalents: Cloud Storage ≈ AWS S3 / Azure Blob Storage; Cloud SQL ≈ Amazon Aurora / Azure Database for MySQL.</p>
+  </section>
+
+  <section>
+    <span class="badge red">Data Types</span>
+    <h2 class="h">Structured or Unstructured?</h2>
+    <p class="lede">Structured data lives in tables, rows and columns. Unstructured data is documents, media and files, roughly <strong>80%</strong> of all data. Classify each example.</p>
+    <div class="card"><div class="sorter" id="sorter"></div>
+    <div class="zone-status" id="sortOut" style="margin-top:12px;"></div></div>
+  </section>
+
+  <section>
+    <span class="badge blue">Cloud Storage</span>
+    <h2 class="h">Storage Classes: Pick by Access Frequency</h2>
+    <p class="lede">Every class has unlimited storage (no minimum object size), worldwide access and locations, low latency, high durability, and geo-redundancy. They differ in how often you expect to read the data.</p>
+    <div class="loop-tabs" id="clsTabs"></div>
+    <div class="card" id="clsPanel"></div>
+    <div class="card" style="margin-top:14px;">
+      <strong>Scenario check</strong>
+      <p style="font-size:14px; color:var(--sub); margin:6px 0 10px;">An application reads and updates its files many times a day. Which class? Click one.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;" id="scn"></div>
+      <div class="zone-status" id="scnOut" style="margin-top:12px;"></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="badge risk">Buckets and Versioning</span>
+    <h2 class="h">Buckets, Objects, and Object Versioning</h2>
+    <div class="grid-cards">
+      <div class="card mini"><h3>Buckets</h3><p>Files are organized into buckets. Each has a <strong>unique name</strong> and a <strong>geographic location</strong>. Ideal location: where latency is minimized.</p></div>
+      <div class="card mini"><h3>Integration</h3><p>Works with BigQuery, Cloud SQL, App Engine, Firestore and Compute Engine. Import/export data to Cloud SQL and BigQuery; store App Engine logs and Firestore backups.</p></div>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <strong>Versioning demo</strong>
+      <p style="font-size:14px; color:var(--sub); margin:6px 0 10px;">Upload a new version of the same object, with versioning on or off.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="ghost-btn" id="vToggle"></button>
+        <button class="ghost-btn" id="vUp">Upload new version</button>
+        <button class="ghost-btn" id="vReset">Reset</button>
+      </div>
+      <div class="vers" id="vers"></div>
+      <div class="zone-status" id="vOut"></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="badge red">Relational Databases</span>
+    <h2 class="h">Databases and Cloud SQL</h2>
+    <p class="lede">A database is a collection of information organized so it can easily be accessed and managed. Relational databases are the most common: RDBMS = relational = SQL databases.</p>
+    <div class="grid-cards">
+      <div class="card mini"><h3>Good fit when</h3><ul class="tight"><li>You have a well-structured data model</li><li>You need transactions</li><li>You join data across tables for complex combinations</li></ul></div>
+      <div class="card mini"><h3>Cloud SQL</h3><ul class="tight"><li>Engines: MySQL, PostgreSQL, SQL Server</li><li>Google applies updates, manages backups, configures replication</li><li>Workloads under 64 TB</li></ul></div>
+      <div class="card mini"><h3>Reasons to use it</h3><ul class="tight"><li>No software to install or maintain</li><li>Scales to 64 cores, 400+ GB RAM, 30 TB storage</li><li>Automatic replication; 7 backups included in instance cost</li><li>Encrypted on Google's networks and at rest; network firewall</li></ul></div>
+      <div class="card mini"><h3>Cloud Spanner</h3><p>The other managed relational service. SQL-based, <strong>horizontally scalable and globally available</strong>.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="badge blue">Decision Chart</span>
+    <h2 class="h">Choose the Best Storage Option</h2>
+    <p class="lede">The slide chart asks: structured or unstructured? Transactional or analytical? Local/regional or global?</p>
+    <div class="card">
+      <div class="tl-label">DATA</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;" id="dcData"></div>
+      <div class="tl-label">WORKLOAD</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;" id="dcWork"></div>
+      <div class="tl-label">MODEL</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;" id="dcModel"></div>
+      <div class="tl-label">SCALE</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;" id="dcScale"></div>
+      <div class="zone-status" id="dcOut"></div>
+    </div>
+    <div class="pair-grid">
+      <div class="card pair-card"><div class="label">Transactional</div><p>Frequent reads and writes through applications on an operational database.</p></div>
+      <div class="card pair-card"><div class="label">Analytical</div><p>Large amounts of data: warehouses, ML training. Fewer read/write operations.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="badge blue">Hands-on Labs</span>
+    <h2 class="h">Lab Progress</h2>
+    <div class="cmd-status">
+      <div style="display:flex; align-items:baseline; gap:8px;">
+        <span class="cmd-count" id="lab_count">0</span>
+        <span style="font-family:var(--mono); font-size:12px; color:var(--sub);">/ 6 steps</span>
+      </div>
+      <div class="cmd-bar-track"><div class="cmd-bar-fill" id="lab_bar"></div></div>
+      <button class="ghost-btn" id="lab_reset">Reset</button>
+    </div>
+    <div id="lab_list"></div>
+  </section>
+
+  <!-- FROM THE SLIDES -->
+  <section>
+    <span class="badge risk">From the Slides</span>
+    <h2 class="h">Slide-by-Slide Notes</h2>
+    <p class="lede">Everything on the Module 5 deck, grouped the way the agenda runs, including the speaker notes. Click a row to expand it.</p>
+    <div id="slideNotes"></div>
+  </section>
+
+  <section>
+    <span class="badge blue">Vocabulary</span>
+    <h2 class="h">Terms to Know</h2>
+    <p class="lede">Worded from the slides wherever possible.</p>
+    <div class="scroll-x"><table class="cmp">
+      <tr><th>Term</th><th>Meaning</th></tr>
+      <tr><td>Structured data</td><td style="font-weight:400;">Tables, rows and columns, e.g. spreadsheets or relational databases.</td></tr>
+      <tr><td>Unstructured data</td><td style="font-weight:400;">Text and multimedia: email, documents, photos, videos, presentations, webpages. About 80% of all data.</td></tr>
+      <tr><td>Database</td><td style="font-weight:400;">A collection of information organized so it can easily be accessed and managed.</td></tr>
+      <tr><td>RDBMS</td><td style="font-weight:400;">Relational database management system = relational database = SQL database.</td></tr>
+      <tr><td>Transactional workload</td><td style="font-weight:400;">Frequent reads and writes through an application on an operational database.</td></tr>
+      <tr><td>Analytical workload</td><td style="font-weight:400;">Large-scale analysis, data warehousing, ML; fewer read/write operations.</td></tr>
+      <tr><td>Cloud Storage</td><td style="font-weight:400;">Fully managed, scalable object storage in uniquely named buckets.</td></tr>
+      <tr><td>Bucket</td><td style="font-weight:400;">Container for Cloud Storage files, with a unique name and a geographic location.</td></tr>
+      <tr><td>Standard storage</td><td style="font-weight:400;">Hot data: frequently accessed for a short period.</td></tr>
+      <tr><td>Nearline storage</td><td style="font-weight:400;">About once per month; backups and archiving.</td></tr>
+      <tr><td>Coldline storage</td><td style="font-weight:400;">At most once every 90 days.</td></tr>
+      <tr><td>Archive storage</td><td style="font-weight:400;">About once a year.</td></tr>
+      <tr><td>Object versioning</td><td style="font-weight:400;">Keeps a history of each modification (V1, V2, V3) instead of overwriting.</td></tr>
+      <tr><td>Geo-redundancy</td><td style="font-weight:400;">Duplicate copies in other locations so data stays reachable.</td></tr>
+      <tr><td>Cloud SQL</td><td style="font-weight:400;">Managed relational DB for MySQL, PostgreSQL and SQL Server.</td></tr>
+      <tr><td>Cloud Spanner</td><td style="font-weight:400;">Managed relational DB for global scalability.</td></tr>
+      <tr><td>Firestore</td><td style="font-weight:400;">NoSQL database for transactional workloads.</td></tr>
+      <tr><td>Cloud Bigtable</td><td style="font-weight:400;">NoSQL database for analytical workloads.</td></tr>
+      <tr><td>BigQuery</td><td style="font-weight:400;">SQL-based analytical data warehouse.</td></tr>
+      <tr><td>Horizontal scaling</td><td style="font-weight:400;">Adding more servers to handle a growing workload.</td></tr>
+    </table></div>
+  </section>
+
+  <!-- KNOWLEDGE CHECK -->
+  <section>
+    <span class="badge red">Knowledge Check</span>
+    <h2 class="h">Modules 5–6 Knowledge Check, Replayed</h2>
+    <p class="lede">The 10 poll questions from class ("CETE 3372 Knowledge Check, M5–M6"). Your picks from the screenshots are tagged after you answer and may not be your final submitted answers. Q8–Q10 (and the Firestore and Bigtable parts of the chart) are Part 2 material.</p>
+    <div id="kc_container"></div>
+    <div id="kc_bar" class="quizbar">
+      <span><span id="kc_score">0</span>/10 correct</span>
+      <button id="kc_reset">Reset</button>
+    </div>
+    <div class="pair-grid">
+      <div class="card pair-card"><div class="label">Heads-up on reconstruction</div><p>Q3 was multiple choice (pick two) and is converted here to pick-the-pair. Q5's text was cut off in the screenshot, and Q10's option list was garbled. Correct answers were confirmed when the instructor reviewed the answers in Week 6 (Q3 wasn't read aloud).</p></div>
+    </div>
+  </section>
+
+  <!-- SLIDE CHECK -->
+  <section>
+    <span class="badge risk">Slide Check</span>
+    <h2 class="h">Questions From the Slides</h2>
+    <p class="lede">9 extra questions written from the deck itself, since slide wording is what tends to show up on exams. These are mine, not your instructor's.</p>
+    <div id="sc_container"></div>
+    <div id="sc_bar" class="quizbar">
+      <span><span id="sc_score">0</span>/9 correct</span>
+      <button id="sc_reset">Reset</button>
+    </div>
+  </section>
+
+  <!-- CHEAT SHEET -->
+  <section>
+    <span class="badge plain">Cheat Sheet</span>
+    <h2 class="h">The Five-Minute-Before-The-Exam Version</h2>
+    <div class="cheat-grid">
+      <div class="card cheat-card"><div class="label">Classes</div><p>Standard (hot) · Nearline (~monthly) · Coldline (every 90 days) · Archive (~yearly).</p></div>
+      <div class="card cheat-card"><div class="label">Cloud Storage</div><p>Object storage in buckets with unique name + location. Versioning keeps V1, V2, V3.</p></div>
+      <div class="card cheat-card"><div class="label">Cloud SQL</div><p>Managed MySQL, PostgreSQL, SQL Server. Regional, under 64 TB.</p></div>
+      <div class="card cheat-card"><div class="label">Cloud Spanner</div><p>Relational + transactions + global, horizontally scalable.</p></div>
+      <div class="card cheat-card"><div class="label">Chart</div><p>Transactional SQL: Cloud SQL (regional) / Spanner (global) · NoSQL: Firestore · Analytical SQL: BigQuery · NoSQL: Bigtable.</p></div>
+      <div class="card cheat-card"><div class="label">Data</div><p>Structured = tables. Unstructured ≈ 80% of data.</p></div>
+    </div>
+  </section>
+
+</div>
+
+<footer>CETE 3370 — Class 5 · Fall 2026 <br><span id="footerStatus"></span></footer>
+
+<script>
+
+function lsGet(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+function onAct(n,fn){ n.setAttribute('role','button'); n.setAttribute('tabindex','0'); n.addEventListener('click',fn); n.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); fn(); } }); }
+
+function buildFlip(container, items){
+  items.forEach(e=>{
+    const card=document.createElement('div');
+    card.className='flip-card group [perspective:1200px] cursor-pointer select-none';
+    card.setAttribute('role','button'); card.setAttribute('tabindex','0'); card.setAttribute('aria-pressed','false');
+    card.innerHTML=`
+      <div class="flip-inner grid transition-transform duration-700 [transform-style:preserve-3d]" style="transform:rotateY(0deg);">
+        <div class="col-start-1 row-start-1 [backface-visibility:hidden] flex flex-col justify-center gap-2 rounded-lg border-[1.5px] border-[#16150f] bg-[#fffdf7] p-4 min-h-[150px] shadow-[3px_3px_0_rgba(22,21,15,0.08)] transition-shadow duration-300 group-hover:shadow-[5px_5px_0_rgba(22,21,15,0.12)]">
+          <div class="font-mono text-[28px] font-bold" style="color:var(--violet); opacity:.75;">0${e.n}</div>
+          <div class="text-[15px] font-bold text-[#16150f] leading-snug">${e.title}</div>
+        </div>
+        <div class="col-start-1 row-start-1 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col justify-center rounded-lg border-[1.5px] border-[#16150f] p-4 min-h-[150px] text-[13.5px] text-[#f6f3ec]" style="background:var(--violet);">
+          <p class="leading-snug">${e.back}</p>
+        </div>
+      </div>`;
+    const inner=card.querySelector('.flip-inner');
+    function toggle(){ const f=card.getAttribute('aria-pressed')==='true'; card.setAttribute('aria-pressed',String(!f)); inner.style.transform=f?'rotateY(0deg)':'rotateY(180deg)'; }
+    card.addEventListener('click',toggle);
+    card.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); toggle(); } });
+    container.appendChild(card);
+  });
+}
+
+function buildAcc(container, items){
+  items.forEach(a=>{
+    const item=document.createElement('div');
+    item.className='acc-item';
+    item.innerHTML=`<div class="acc-head"><strong>${a.title}</strong><span class="acc-plus">+</span></div>
+      <div class="acc-body">${a.html?`<div class="acc-rich">${a.html}</div>`:`<p>${a.body}</p>`}${a.chips&&a.chips.length?`<div class="chips">${a.chips.map(c=>`<span class="tag-chip">${c}</span>`).join('')}</div>`:''}</div>`;
+    onAct(item,()=>item.classList.toggle('open'));
+    container.appendChild(item);
+  });
+}
+
+function makeTabs(tabsEl, panelEl, items, renderPanel, startId, after){
+  let active=startId||items[0].id;
+  function draw(){
+    tabsEl.innerHTML='';
+    items.forEach(it=>{
+      const b=document.createElement('div');
+      b.className='loop-tab '+(it.cls||'')+(active===it.id?' active':'');
+      b.textContent=it.label;
+      onAct(b,()=>{ active=it.id; draw(); });
+      tabsEl.appendChild(b);
+    });
+    const cur=items.find(i=>i.id===active);
+    panelEl.innerHTML=renderPanel(cur);
+    if(after) after(panelEl,cur);
+  }
+  draw();
+}
+
+function makeChecklist(o){
+  let done=lsGet(o.key,{});
+  function n(){ return Object.values(done).filter(Boolean).length; }
+  function render(){
+    o.list.innerHTML='';
+    o.steps.forEach((s,i)=>{
+      const d=!!done[i];
+      const item=document.createElement('div');
+      item.className='cmd-item'+(d?' done':'');
+      item.innerHTML=`<div class="cmd-check">${d?'✓':''}</div><p>${s.t}${s.d?`<span class="cmd-detail">${s.d}</span>`:''}</p>`;
+      item.addEventListener('click',()=>{ done[i]=!d; lsSet(o.key,done); render(); if(o.onChange) o.onChange(); });
+      o.list.appendChild(item);
+    });
+    o.count.textContent=n();
+    o.bar.style.width=(n()/o.steps.length*100)+'%';
+  }
+  o.reset.addEventListener('click',()=>{ done={}; lsSet(o.key,done); render(); if(o.onChange) o.onChange(); });
+  render();
+  return {count:n,total:o.steps.length};
+}
+
+function makeQuiz(data, container, scoreEl, resetBtn, onChange){
+  const answers={};
+  function score(){ return Object.keys(answers).filter(k=>answers[k]===data[k].correct).length; }
+  function render(){
+    container.innerHTML='';
+    data.forEach((q,qi)=>{
+      const card=document.createElement('div');
+      card.className='quiz-card';
+      const answered=answers[qi]!==undefined;
+      const mine=(answered&&q.mine!==undefined)?`<div class="quiz-mine ${q.mine===q.correct?'ok':'no'}">In class you picked: ${q.opts[q.mine]} ${q.mine===q.correct?'✓':'✗'}</div>`:'';
+      card.innerHTML=`
+        <div class="quiz-q">${qi+1}. ${q.q}</div>
+        <div class="quiz-opts">
+          ${q.opts.map((o,oi)=>{
+            let cls='quiz-opt';
+            if(answered){ if(oi===q.correct) cls+=' correct'; else if(oi===answers[qi]) cls+=' wrong'; }
+            return `<button class="${cls}" data-qi="${qi}" data-oi="${oi}" ${answered?'disabled':''}>${o}</button>`;
+          }).join('')}
+        </div>
+        <div class="quiz-why ${answered?'show':''}">${q.why}${mine?'<br>'+mine:''}</div>`;
+      container.appendChild(card);
+    });
+    container.querySelectorAll('.quiz-opt').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const qi=btn.dataset.qi;
+        if(answers[qi]!==undefined) return;
+        answers[qi]=parseInt(btn.dataset.oi);
+        render(); scoreEl.textContent=score(); onChange();
+      });
+    });
+  }
+  resetBtn.addEventListener('click',()=>{ Object.keys(answers).forEach(k=>delete answers[k]); render(); scoreEl.textContent=score(); onChange(); });
+  render(); scoreEl.textContent=score();
+  return {score};
+}
+
+// ---------- Sorter ----------
+const items=[["A table of student IDs, names and majors","s"],["Photos of the campus","u"],["A spreadsheet of grades","s"],["Recorded lecture videos","u"],["A relational database of orders","s"],["Email messages","u"]];
+const sortState={};
+function renderSorter(){
+  const box=document.getElementById('sorter'); box.innerHTML='';
+  items.forEach((it,i)=>{
+    const r=document.createElement('div'); const st=sortState[i];
+    r.className='sort-row'+(st?(st===it[1]?' ok':' no'):'');
+    const lab=document.createElement('span'); lab.textContent=it[0]; r.appendChild(lab);
+    const g=document.createElement('span'); g.style.display='flex'; g.style.gap='6px';
+    [["s","Structured"],["u","Unstructured"]].forEach(([k,t])=>{ const b=document.createElement('button'); b.className='ghost-btn'; b.textContent=t; onAct(b,()=>{ sortState[i]=k; renderSorter(); }); g.appendChild(b); });
+    r.appendChild(g); box.appendChild(r);
+  });
+  const done=Object.keys(sortState).length, ok=items.filter((it,i)=>sortState[i]===it[1]).length;
+  document.getElementById('sortOut').textContent = done<items.length ? `${done}/${items.length} classified` : `${ok}/${items.length} correct. Tables, rows and columns = structured; files and media = unstructured.`;
+}
+renderSorter();
+
+// ---------- Storage classes ----------
+const classes=[
+ {id:"std",label:"Standard",cls:"t-red",freq:"Hot data",desc:"Frequently accessed for a short period of time."},
+ {id:"near",label:"Nearline",cls:"t-amber",freq:"About once per month",desc:"Infrequently accessed: reading or modifying about once a month on average. Data backups or archiving."},
+ {id:"cold",label:"Coldline",cls:"t-blue",freq:"At most once every 90 days",desc:"Reading or modifying data at most once every 90 days."},
+ {id:"arch",label:"Archive",cls:"t-good",freq:"About once a year",desc:"Storing purposes, not much accessing. About once a year."}
+];
+makeTabs(document.getElementById('clsTabs'),document.getElementById('clsPanel'),classes,c=>`
+  <strong style="font-size:18px;">${c.label} storage</strong>
+  <p style="color:var(--muted); font-family:var(--mono); font-size:12px; margin:2px 0 8px;">${c.freq}</p>
+  <p style="margin:0;">${c.desc}</p>`,'std');
+(function(){
+  const box=document.getElementById('scn'), out=document.getElementById('scnOut');
+  classes.forEach(c=>{ const b=document.createElement('button'); b.className='ghost-btn'; b.textContent=c.label; onAct(b,()=>{ out.className='zone-status'+(c.id==='std'?'':' warn'); out.textContent=c.id==='std'?'Correct: Standard is for hot, frequently accessed data.':c.label+' is for rarer access ('+c.freq.toLowerCase()+'). Frequent reads and writes need Standard.'; }); box.appendChild(b); });
+})();
+
+// ---------- Versioning ----------
+let vOn=true, vN=1;
+function renderVers(){
+  const t=document.getElementById('vToggle'); t.textContent='Versioning: '+(vOn?'ON':'OFF');
+  const box=document.getElementById('vers'); box.innerHTML='';
+  const n=vOn?vN:1;
+  for(let i=1;i<=n;i++){ const c=document.createElement('div'); c.className='vcell'+(i<n?' old':''); c.textContent=vOn?('V'+i+(i===n?' (live)':'')):'Current only'; box.appendChild(c); }
+  document.getElementById('vOut').textContent = vOn ? 'Each upload is kept as a new version: a detailed history of the object.' : 'Each upload completely overwrites the older one. No history.';
+}
+document.getElementById('vToggle').addEventListener('click',()=>{ vOn=!vOn; renderVers(); });
+document.getElementById('vUp').addEventListener('click',()=>{ if(vN<6) vN++; renderVers(); });
+document.getElementById('vReset').addEventListener('click',()=>{ vN=1; vOn=true; renderVers(); });
+renderVers();
+
+// ---------- Decision chart ----------
+const dc={data:null,work:null,model:null,scale:null};
+function seg(id,key,opts){
+  const box=document.getElementById(id);
+  function r(){ box.innerHTML=''; opts.forEach(([k,t])=>{ const b=document.createElement('button'); b.className='ghost-btn'; b.textContent=t; if(dc[key]===k){ b.style.background='var(--ink)'; b.style.color='var(--bg)'; } onAct(b,()=>{ dc[key]=k; renderAll(); }); box.appendChild(b); }); }
+  return r;
+}
+const rs=[seg('dcData','data',[["s","Structured"],["u","Unstructured"]]),seg('dcWork','work',[["t","Transactional"],["a","Analytical"]]),seg('dcModel','model',[["sql","SQL"],["nosql","NoSQL"]]),seg('dcScale','scale',[["reg","Local / regional"],["glob","Global"]])];
+function renderAll(){
+  rs.forEach(f=>f());
+  const o=document.getElementById('dcOut'); o.className='zone-status';
+  let t;
+  if(dc.data==='u') t='Unstructured data → Cloud Storage.';
+  else if(dc.data!=='s') t='Pick the kind of data.';
+  else if(!dc.work) t='Structured data. Is the workload transactional or analytical?';
+  else if(dc.work==='t'){
+    if(!dc.model) t='Transactional. SQL or NoSQL?';
+    else if(dc.model==='nosql') t='Transactional + NoSQL → Firestore.';
+    else if(!dc.scale) t='Transactional + SQL. Regional or global scale?';
+    else t=dc.scale==='reg'?'Transactional + SQL + regional → Cloud SQL.':'Transactional + SQL + global → Cloud Spanner.';
+  } else {
+    if(!dc.model) t='Analytical. SQL or NoSQL?';
+    else t=dc.model==='sql'?'Analytical + SQL → BigQuery.':'Analytical + NoSQL → Cloud Bigtable.';
+  }
+  o.textContent=t;
+}
+renderAll();
+
+const labSteps=[
+ {t:"Cloud Storage lab: create a storage bucket",d:""},
+ {t:"Cloud Storage lab: upload an image to the bucket",d:""},
+ {t:"Cloud Storage lab: make the image publicly accessible",d:""},
+ {t:"Cloud Storage lab: create and delete folders",d:""},
+ {t:"Cloud SQL lab: create a Cloud SQL (MySQL) instance",d:""},
+ {t:"Cloud SQL lab: connect with the mysql client in Cloud Shell",d:""}
+];
+const kcData=[
+ {q:"Which example best represents structured data?",opts:["A collection of recorded lectures","A table containing student IDs, names, and majors","A folder containing campus photographs","A collection of audio recordings"],correct:1,mine:1,why:"Structured data is in tables, rows and columns. Lectures, photos and audio are unstructured."},
+ {q:"An application reads and updates its stored files many times each day. Which Cloud Storage class is most appropriate?",opts:["Standard storage","Nearline storage","Coldline storage","Archive storage"],correct:0,mine:3,why:"Standard is for hot, frequently accessed data. Nearline is ~monthly, Coldline every 90 days, Archive ~yearly."},
+ {q:"Google Cloud offers two managed relational database services. What are they? (Multiple choice in class: pick two.)",opts:["Cloud Spanner and Cloud SQL","Cloud Bigtable and Firestore","Cloud Storage and Cloud SQL","Cloud Bigtable and Cloud Spanner"],correct:0,mine:0,why:"Cloud SQL and Cloud Spanner are the managed relational services. Bigtable and Firestore are NoSQL; Cloud Storage is object storage."},
+ {q:"A university needs to store photographs, videos, and PDF files for its website. Which Google Cloud service is most appropriate?",opts:["Cloud SQL","Cloud Spanner","Firestore","Cloud Storage"],correct:3,mine:3,why:"Unstructured media for website content = Cloud Storage."},
+ {q:"Google Cloud has different options for SQL-based managed services. Which of these is horizontally scalable and globally available? (Question text was cut off in the screenshot.)",opts:["Cloud Bigtable","Cloud Spanner","Cloud SQL","Firestore"],correct:1,mine:1,why:"Cloud Spanner is the relational service for global, horizontal scale. Cloud SQL is regional."},
+ {q:"An application requires a relational database that supports transactions and global scalability. According to the storage selection guide in the slides, which service is the best fit?",opts:["Bigtable","Cloud Storage","Cloud Spanner","Firestore"],correct:2,mine:2,why:"Transactional + SQL + global = Cloud Spanner."},
+ {q:"Cloud databases support horizontal scaling. What does horizontal scaling mean?",opts:["Adding more servers to handle a growing workload","Increasing the memory of a single server","Increasing the processor capacity of a single server","Replacing a server's disk with a larger disk"],correct:0,mine:3,why:"Horizontal scaling = adding more servers. The other options are vertical scaling (a bigger single machine)."},
+ {q:"How does Firestore organize application data?",opts:["As files stored in buckets","As relational tables with fixed columns","As worksheets stored in workbooks","As documents grouped into collections"],correct:3,mine:0,why:"Firestore is a NoSQL document database: documents grouped into collections. (Part 2 material.)"},
+ {q:"A mobile application uses Firestore with offline persistence enabled. A user loses internet access and updates cached data. What happens when the device reconnects?",opts:["Firestore permanently discards the offline changes","Firestore synchronizes the local changes with the cloud database","The user must manually export and upload the changes","Firestore creates a separate relational database for the changes"],correct:1,mine:1,why:"With offline persistence, Firestore syncs local changes back to the cloud database on reconnect. (Part 2 material.)"},
+ {q:"A company collects billions of sensor readings from IoT devices. It needs a NoSQL database with high throughput and low latency under heavy workloads. Which service is the best fit? (Option list was garbled in the screenshot.)",opts:["Cloud SQL","Cloud Storage","Cloud Bigtable","Cloud Spanner"],correct:2,mine:3,why:"Bigtable is the NoSQL option for massive throughput and low latency. Per the decision chart it's analytical + NoSQL. (Part 2 material.)"}
+];
+
+const slideNotes = [{"title": "Module overview and objectives (slides 1\u20133)", "html": "<ul><li><strong>Module 5: Storage \u2013 Part 1.</strong> Storage options in Google Cloud \u00b7 Cloud Storage \u00b7 Cloud SQL \u00b7 labs: Cloud Storage Qwik Start (Cloud Console) and Cloud SQL for MySQL Qwik Start \u00b7 knowledge check.</li><li>Objectives: explore the different storage options available in Google Cloud; differentiate structured and unstructured storage; examine how to use Cloud Storage for unstructured data; explore the use cases for relational SQL vs NoSQL options and identify the options available in Google Cloud.</li></ul>"}, {"title": "Google Cloud database and storage services (slides 6\u20137)", "html": "<ul><li><strong>Relational databases:</strong> Cloud SQL, Cloud Spanner.</li><li><strong>NoSQL databases:</strong> Firestore, Bigtable.</li><li><strong>Worldwide object storage:</strong> Cloud Storage.</li><li><em>Speaker note:</em> choosing the right option to store and process data depends on the data type to be stored and the business need.</li><li>Equivalents mentioned in class: Cloud Storage \u2248 AWS S3 / Azure Blob Storage. Cloud SQL \u2248 Amazon Aurora / Azure Database for MySQL. Comparison: cloud.google.com/free/docs/aws-azure-gcp-service-comparison.</li></ul>"}, {"title": "Cloud Storage use cases (slide 8)", "html": "<ul><li><strong>Content storage and delivery</strong> (images and videos that need to be served and delivered).</li><li><strong>Data analytics and general compute</strong> (process or expose data to analytics tools).</li><li><strong>Backup and archival storage</strong> (an extra copy in the cloud).</li></ul>"}, {"title": "Choose the best storage option (slide 10)", "html": "<p>The decision chart asks three things: structured or unstructured, transactional or analytical workload, and local/regional or global scalability.</p><ul><li><strong>Transactional + SQL:</strong> local/regional scalability \u2192 <strong>Cloud SQL</strong>; global scalability \u2192 <strong>Cloud Spanner</strong>.</li><li><strong>Transactional + NoSQL:</strong> <strong>Firestore</strong>.</li><li><strong>Analytical + SQL:</strong> <strong>BigQuery</strong>.</li><li><strong>Analytical + NoSQL:</strong> <strong>Cloud Bigtable</strong>.</li><li><strong>Transactional</strong> workloads: frequent reads and writes through applications on an operational database. <strong>Analytical</strong> workloads: large amounts of data, data warehouses, ML training, with fewer read/write operations.</li></ul>"}, {"title": "Unstructured data and Cloud Storage (slides 12\u201313, 23)", "html": "<ul><li>It's estimated that around <strong>80 percent</strong> of all data is unstructured, and it's far more difficult to process or analyze.</li><li>Unstructured data often includes text and multimedia: e-mail messages, documents, photos, videos, presentations, webpages.</li><li><strong>Cloud Storage is a fully managed, scalable service</strong> for website content, archival and disaster recovery, and direct download.</li></ul>"}, {"title": "The four storage classes (slide 14)", "html": "<ul><li><strong>Standard:</strong> hot data, frequently accessed for a short period of time.</li><li><strong>Nearline:</strong> infrequently accessed data, like reading or modifying data once per month on average. Data backups or archiving.</li><li><strong>Coldline:</strong> reading or modifying data at most once every 90 days.</li><li><strong>Archive:</strong> about once a year.</li></ul>"}, {"title": "Common features of every class (slide 15)", "html": "<ul><li>Unlimited storage (no minimum object size)</li><li>Worldwide accessibility and locations</li><li>Low latency and high durability</li><li>Geo-redundancy</li></ul>"}, {"title": "Buckets, versioning, integration (slides 16\u201318)", "html": "<ul><li><strong>Buckets:</strong> files are organized into buckets, each with a unique name and a geographic location. <em>Note:</em> an ideal location is where latency is minimized.</li><li><strong>Object versioning</strong> keeps a record of modifications. <em>Note:</em> either let each new version completely overwrite the older one, or track each change to an object by enabling versioning within a bucket, keeping a detailed history (V1, V2, V3\u2026).</li><li><strong>Integration</strong> with BigQuery, Cloud SQL, App Engine, Firestore and Compute Engine. <em>Note:</em> additional ways to move data into the service, import/export data to and from Cloud SQL and BigQuery, and store App Engine logs, Firestore backups, and objects used by App Engine.</li></ul>"}, {"title": "Structured data and databases (slides 22\u201325)", "html": "<ul><li><strong>Structured data:</strong> tables, rows, columns, as in spreadsheets or relational databases. Usually easy to capture, access and analyze. Slide example: First_Name, Last_Name, Address, City, Age rows.</li><li><strong>A database</strong> is a collection of information organized so it can easily be accessed and managed. Applications run databases to get fast answers to questions.</li><li><strong>Relational databases are the most common.</strong> RDBMS = relational databases = SQL databases.</li><li>Suitable use cases: a well-structured data model, a need for transactions, and the ability to join data across tables to retrieve complex data combinations.</li></ul>"}, {"title": "Cloud SQL (slides 26\u201329)", "html": "<ul><li><em>Speaker note:</em> Google Cloud offers two managed relational database services, <strong>Cloud SQL</strong> and <strong>Cloud Spanner</strong>.</li><li>Cloud SQL lets you focus on building applications. Engines: <strong>MySQL, PostgreSQL, SQL Server</strong>. Google handles applying updates, managing backups, and configuring replications. (Class: managed relational data for workloads under 64 TB.)</li><li>Reasons to use it: no software installation or maintenance \u00b7 can scale up to 64 processor cores, 400+ GB of RAM and 30 TB of storage \u00b7 supports automatic replication scenarios \u00b7 managed backups (the instance cost covers 7 backups) \u00b7 encrypts customer data on Google's internal networks and when stored in database tables, temporary files and backups \u00b7 includes a network firewall.</li></ul>"}, {"title": "Labs on the slides (slides 20, 31)", "html": "<ul><li><strong>Cloud Storage: Qwik Start \u2013 Cloud Console:</strong> create a storage bucket; upload an object to the bucket; make an object publicly accessible; create and delete folders.</li><li><strong>Cloud SQL for MySQL: Qwik Start:</strong> create a Cloud SQL instance; connect to an instance using the mysql client in Cloud Shell.</li></ul>"}];
+const scData = [{"q": "Roughly what share of all data is estimated to be unstructured?", "opts": ["About 20%", "About 50%", "About 80%", "About 99%"], "correct": 2, "why": "Around 80 percent of all data is unstructured, and it's far more difficult to process or analyze."}, {"q": "Which storage class is for reading or modifying data at most once every 90 days?", "opts": ["Standard", "Nearline", "Coldline", "Archive"], "correct": 2, "why": "Coldline: at most once every 90 days. Nearline is about once a month, Archive about once a year, Standard is hot data."}, {"q": "Nearline storage fits data accessed how often, on average?", "opts": ["Constantly", "About once per month", "About once every 90 days", "About once a year"], "correct": 1, "why": "Nearline: infrequently accessed data, such as reading or modifying once per month, plus backups and archiving."}, {"q": "Which two attributes does every Cloud Storage bucket have, per the slide?", "opts": ["A unique name and a geographic location", "A schema and a primary key", "A VM and a firewall", "A role and a policy"], "correct": 0, "why": "Buckets have a unique name and a geographic location. The ideal location is where latency is minimized."}, {"q": "What does object versioning do when you modify an object?", "opts": ["Always overwrites the old version with no history", "Keeps a record of each version (V1, V2, V3\u2026)", "Deletes the bucket", "Moves the object to Archive"], "correct": 1, "why": "With versioning enabled, each change is tracked in a detailed history. Without it, a new version completely overwrites the older one."}, {"q": "RDBMS, relational databases and ___ are used interchangeably on the slide.", "opts": ["NoSQL databases", "SQL databases", "Object stores", "Data lakes"], "correct": 1, "why": "RDBMS = relational databases = SQL databases."}, {"q": "Which engines does Cloud SQL support?", "opts": ["MySQL, PostgreSQL, SQL Server", "MongoDB, Redis, Cassandra", "Oracle only", "Firestore and Bigtable"], "correct": 0, "why": "Cloud SQL manages MySQL, PostgreSQL and SQL Server."}, {"q": "Which tasks does Cloud SQL take off your plate?", "opts": ["Writing your SQL queries", "Applying updates, managing backups, configuring replications", "Designing your data model", "Choosing your application's language"], "correct": 1, "why": "Google handles applying updates, managing backups and configuring replications so you can focus on building applications."}, {"q": "Per the decision chart, which service fits an analytical workload with SQL data?", "opts": ["Cloud SQL", "Cloud Spanner", "BigQuery", "Firestore"], "correct": 2, "why": "Analytical + SQL = BigQuery. Analytical + NoSQL = Bigtable."}];
+buildAcc(document.getElementById('slideNotes'), slideNotes);
+const sc = makeQuiz(scData, document.getElementById('sc_container'), document.getElementById('sc_score'), document.getElementById('sc_reset'), ()=>updateFooter());
+// ---------- Checklist + quiz ----------
+const lab = makeChecklist({list:document.getElementById('lab_list'), count:document.getElementById('lab_count'), bar:document.getElementById('lab_bar'), reset:document.getElementById('lab_reset'), steps:labSteps, key:'cloud-w5-lab', onChange:()=>updateFooter()});
+const kc = makeQuiz(kcData, document.getElementById('kc_container'), document.getElementById('kc_score'), document.getElementById('kc_reset'), ()=>updateFooter());
+
+function updateFooter(){
+  document.getElementById('footerStatus').textContent=`${lab.count()}/${lab.total} lab steps · ${kc.score()}/${kcData.length} on the knowledge check · ${sc.score()}/${scData.length} on the slide check`;
+}
+updateFooter();
+</script>
+</body>
+</html>

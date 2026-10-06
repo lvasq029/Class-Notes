@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CETE 3370 · Class 02 · Build and Manage Cloud Resources</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --bg:#f6f3ec;
+    --ink:#16150f;
+    --sub:#454236;
+    --muted:#6a6656;
+    --line:#cfc9b6;
+    --card:#fffdf7;
+    --red:oklch(0.53 0.19 25);
+    --red-soft:oklch(0.94 0.045 25);
+    --blue:oklch(0.46 0.14 255);
+    --blue-soft:oklch(0.93 0.03 255);
+    --violet:oklch(0.48 0.15 300);
+    --violet-soft:oklch(0.94 0.035 300);
+    --good:oklch(0.58 0.14 150);
+    --good-soft:oklch(0.94 0.05 150);
+    --bad:oklch(0.55 0.18 25);
+    --bad-soft:oklch(0.94 0.06 25);
+    --amber:oklch(0.72 0.15 75);
+    --amber-soft:oklch(0.95 0.05 75);
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'Space Grotesk', Helvetica, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.5; padding-bottom:60px;}
+  .wrap{max-width:920px; margin:0 auto; padding:0 20px;}
+  header.hero{
+    border-bottom:3px solid var(--ink);
+    padding:34px 20px 26px;
+    background:repeating-linear-gradient(135deg, transparent, transparent 26px, rgba(22,21,15,0.03) 26px, rgba(22,21,15,0.03) 27px);
+  }
+  .kicker{font-family:var(--mono); font-size:12.5px; letter-spacing:.06em; color:var(--sub); text-transform:uppercase; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .kicker .dot{color:var(--muted);}
+  h1.title{font-size:clamp(28px,5vw,44px); line-height:1.05; margin:10px 0 6px; font-weight:700; letter-spacing:-0.01em;}
+  .subtitle{color:var(--sub); font-size:16px; max-width:620px;}
+  .prompt{font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:16px;}
+  .backlink{font-family:var(--mono); font-size:12px; color:var(--muted); text-decoration:none; display:inline-block; margin-bottom:12px;}
+  .backlink:hover{color:var(--violet);}
+
+  .badge{display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:3px 10px; border:1.5px solid var(--ink); border-radius:3px; margin-bottom:10px;}
+  .badge.risk{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .badge.red{background:var(--red-soft); border-color:var(--red); color:var(--red);}
+  .badge.blue{background:var(--blue-soft); border-color:var(--blue); color:var(--blue);}
+  .badge.plain{background:var(--card);}
+
+  section{padding:36px 0; border-bottom:1.5px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2.h{font-size:26px; font-weight:700; margin:0 0 6px; letter-spacing:-0.01em;}
+  .lede{color:var(--sub); margin-bottom:20px; max-width:640px;}
+
+  .card{background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:18px 20px; box-shadow:3px 3px 0 rgba(22,21,15,0.08);}
+  ul.tight{margin:8px 0; padding-left:20px;}
+  ul.tight li{margin-bottom:5px;}
+
+  /* Housekeeping */
+  .house-grid{display:grid; gap:12px;}
+  .house-item{background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:14px 16px; display:flex; gap:14px; align-items:flex-start;}
+  .house-item .tag{font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.05em; background:var(--amber-soft); border:1.5px solid var(--ink); border-radius:5px; padding:2px 8px; white-space:nowrap; flex-shrink:0; margin-top:2px;}
+  .house-item a{color:var(--blue); word-break:break-all;}
+
+  /* NIST quote */
+  .nist{border-left:5px solid var(--violet);}
+  .nist blockquote{margin:0 0 12px; font-size:15.5px; color:var(--ink);}
+  .nist mark{background:var(--amber-soft); border-bottom:2px solid var(--amber); padding:0 2px; color:inherit;}
+  .nist-counts{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-top:14px;}
+  .nist-count{border:1.5px solid var(--line); border-radius:7px; background:var(--bg); padding:10px 12px; text-align:center;}
+  .nist-count b{display:block; font-family:var(--mono); font-size:28px; color:var(--violet);}
+  .nist-count span{font-size:12.5px; color:var(--sub);}
+
+  /* Tabs */
+  .loop-tabs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;}
+  .loop-tab{font-family:var(--mono); font-size:12.5px; font-weight:600; border:1.5px solid var(--ink); border-radius:6px; background:var(--card); padding:8px 14px; cursor:pointer; transition:all .15s;}
+  .loop-tab.active{background:var(--violet); color:var(--bg); border-color:var(--violet);}
+  .loop-tab:hover:not(.active){background:var(--violet-soft);}
+  .loop-tab.t-red.active{background:var(--red); border-color:var(--red);}
+  .loop-tab.t-blue.active{background:var(--blue); border-color:var(--blue);}
+  .loop-tab.t-good.active{background:var(--good); border-color:var(--good);}
+  .loop-tab.t-amber.active{background:var(--amber); border-color:var(--amber); color:var(--ink);}
+  .tag-chip{font-family:var(--mono); font-size:11.5px; padding:4px 10px; border:1.5px solid var(--line); border-radius:999px; color:var(--sub); background:var(--bg);}
+
+  /* Responsibility stack */
+  .stack{display:flex; flex-direction:column; gap:4px; margin:14px 0;}
+  .layer{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 12px; border:1.5px solid var(--ink); border-radius:5px; font-size:13.5px; font-weight:600; transition:background .2s;}
+  .layer small{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; font-weight:700;}
+  .layer.you{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .layer.them{background:var(--bg); border-color:var(--line); color:var(--muted);}
+  .ex-row{display:flex; justify-content:space-between; gap:12px; font-size:14px; padding:8px 0; border-top:1px dashed var(--line);}
+  .ex-row strong{color:var(--blue); flex-shrink:0;}
+  .ex-row span{text-align:right;}
+
+  /* Accordion */
+  .acc-item{border:1.5px solid var(--ink); border-radius:8px; background:var(--card); padding:14px 16px; cursor:pointer; margin-bottom:10px; transition:box-shadow .15s;}
+  .acc-item:hover{box-shadow:3px 3px 0 rgba(22,21,15,0.08);}
+  .acc-head{display:flex; justify-content:space-between; align-items:center; gap:10px;}
+  .acc-head strong{font-size:15.5px;}
+  .acc-plus{font-family:var(--mono); font-size:18px; color:var(--violet); flex-shrink:0; transition:transform .2s;}
+  .acc-item.open .acc-plus{transform:rotate(45deg);}
+  .acc-body{max-height:0; overflow:hidden; transition:max-height .25s ease;}
+  .acc-item.open .acc-body{max-height:320px;}
+  .acc-body p{font-size:14px; color:var(--sub); margin:10px 0 0; padding-top:10px; border-top:1px dashed var(--line);}
+  .acc-body .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;}
+
+  /* Stats */
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px;}
+  .stat .big{font-family:var(--mono); font-size:34px; font-weight:700; color:var(--blue); line-height:1.1;}
+  .stat .lbl{font-size:13px; color:var(--sub); margin-top:4px;}
+
+  /* Zone demo */
+  .zone-wrap{display:grid; gap:12px;}
+  .region-box{border:1.5px dashed var(--ink); border-radius:10px; padding:14px; background:var(--card);}
+  .region-name{font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.05em; margin-bottom:10px;}
+  .zones{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px;}
+  .zone{border:1.5px solid var(--ink); border-radius:8px; padding:12px; background:var(--good-soft); cursor:pointer; transition:all .2s; user-select:none;}
+  .zone:hover{box-shadow:3px 3px 0 rgba(22,21,15,0.1);}
+  .zone .zn{font-family:var(--mono); font-size:12.5px; font-weight:700;}
+  .zone .vm{margin-top:8px; font-size:13px; border:1.5px solid var(--good); background:var(--bg); border-radius:5px; padding:6px 8px;}
+  .zone.down{background:var(--bad-soft); border-color:var(--bad); opacity:.85;}
+  .zone.down .vm{border-color:var(--bad); text-decoration:line-through; color:var(--muted);}
+  .zone-status{margin-top:12px; font-size:14px; padding:10px 14px; border-radius:6px; border:1.5px solid var(--ink); background:var(--good-soft); font-weight:600;}
+  .zone-status.warn{background:var(--amber-soft);}
+  .zone-status.bad{background:var(--bad-soft);}
+
+  /* Checklist */
+  .cmd-status{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:14px 18px; margin-bottom:14px;}
+  .cmd-count{font-family:var(--mono); font-size:24px; color:var(--violet); font-weight:700;}
+  .cmd-bar-track{flex:1; min-width:140px; height:8px; background:var(--line); border-radius:999px; overflow:hidden;}
+  .cmd-bar-fill{height:100%; width:0%; background:var(--violet); border-radius:999px; transition:width .35s;}
+  .ghost-btn{font-family:var(--mono); font-size:11.5px; letter-spacing:.05em; text-transform:uppercase; padding:7px 13px; background:var(--bg); border:1.5px solid var(--ink); border-radius:999px; color:var(--ink); cursor:pointer;}
+  .ghost-btn:hover{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .cmd-item{display:flex; align-items:flex-start; gap:12px; padding:12px 14px; background:var(--card); border:1.5px solid var(--line); border-radius:7px; cursor:pointer; transition:opacity .2s, border-color .2s; margin-bottom:8px;}
+  .cmd-item.done{opacity:0.55; border-color:var(--good);}
+  .cmd-check{flex-shrink:0; width:22px; height:22px; border-radius:5px; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:13px; color:var(--bg); margin-top:1px; background:var(--bg);}
+  .cmd-item.done .cmd-check{background:var(--good); border-color:var(--good);}
+  .cmd-item p{margin:0; font-size:14.5px;}
+  .cmd-callout{margin-top:14px; background:var(--amber-soft); border:1.5px solid var(--ink); border-left:4px solid var(--amber); border-radius:6px; padding:14px 16px; font-size:13.5px; line-height:1.5; color:var(--sub);}
+
+  /* Cheat sheet */
+  .cheat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px;}
+  .cheat-card .label{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--violet); margin-bottom:6px;}
+  .cheat-card p{font-size:13.5px; line-height:1.45; margin:0; color:var(--sub);}
+
+  /* Quiz */
+  .quiz-card{border:1.5px solid var(--ink); border-radius:8px; padding:16px; background:var(--card); margin-bottom:14px;}
+  .quiz-q{font-weight:600; margin-bottom:10px;}
+  .quiz-opts{display:flex; flex-direction:column; gap:8px;}
+  .quiz-opt{text-align:left; padding:9px 12px; border:1.5px solid var(--line); border-radius:6px; background:var(--bg); cursor:pointer; font-family:var(--sans); font-size:14px; transition:all .15s; color:var(--ink);}
+  .quiz-opt:hover:not(:disabled){border-color:var(--violet);}
+  .quiz-opt.correct{background:var(--good-soft); border-color:var(--good); font-weight:700;}
+  .quiz-opt.wrong{background:var(--bad-soft); border-color:var(--bad);}
+  .quiz-why{display:none; margin-top:10px; font-size:13px; color:var(--sub); border-top:1px dashed var(--line); padding-top:10px;}
+  .quiz-why.show{display:block;}
+  .quizbar{position:sticky; bottom:0; background:var(--ink); color:var(--bg); border-radius:8px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); margin-top:6px;}
+  .quizbar button{font-family:var(--mono); background:var(--bg); color:var(--ink); border:none; border-radius:5px; padding:7px 14px; cursor:pointer; font-weight:700;}
+
+  .quiz-mine{font-family:var(--mono); font-size:11.5px; display:inline-block; margin-top:10px; padding:2px 10px; border-radius:999px; border:1.5px solid;}
+  .quiz-mine.ok{border-color:var(--good); background:var(--good-soft);}
+  .quiz-mine.no{border-color:var(--bad); background:var(--bad-soft);}
+  .pair-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-top:16px;}
+  .pair-card .label{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--red); margin-bottom:6px;}
+  .pair-card p{font-size:13.5px; margin:4px 0; color:var(--sub);}
+
+  footer{text-align:center; font-family:var(--mono); font-size:12px; color:var(--muted); padding:30px 20px 0;}
+  #footerStatus{color:var(--violet); font-weight:600;}
+
+  .flip-inner{transition-timing-function:cubic-bezier(.34,1.56,.64,1);}
+  .flip-card:active .flip-inner{transform:scale(0.97) !important;}
+
+  code{font-family:var(--mono); font-size:12.5px; background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:1px 5px; color:var(--ink);}
+  .cmd-detail{display:block; font-size:12.5px; color:var(--muted); margin-top:3px;}
+  .acc-item.open .acc-body{max-height:900px;}
+  .acc-rich{font-size:14px; color:var(--sub); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);}
+  .acc-rich p{margin:0 0 8px;}
+  .acc-rich ul{margin:6px 0 8px; padding-left:20px;}
+  .acc-rich li{margin-bottom:5px;}
+  .acc-rich blockquote{margin:0 0 8px; padding-left:12px; border-left:3px solid var(--violet);}
+  .acc-body ul{margin:8px 0 0; padding-left:20px; font-size:14px; color:var(--sub);}
+  .acc-body li{margin-bottom:4px;}
+  .grid-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px;}
+  .mini h3{font-size:16px; margin:0 0 4px;}
+  .mini p{font-size:13.5px; color:var(--sub); margin:6px 0 0;}
+  .mini .tag-chip{display:inline-block;}
+  .scroll-x{overflow-x:auto;}
+  table.cmp{width:100%; border-collapse:collapse; font-size:14px; background:var(--card); border:1.5px solid var(--ink); border-radius:8px;}
+  .cmp th,.cmp td{padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top;}
+  .cmp th{font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; background:var(--violet-soft); color:var(--violet);}
+  .cmp td:first-child{font-weight:700;}
+  .cmp tr:last-child td{border-bottom:none;}
+  .spec{display:flex; align-items:center; gap:0; margin:0 0 16px;}
+  .spec .dotp{width:14px; height:14px; border-radius:50%; border:1.5px solid var(--ink); background:var(--bg); flex-shrink:0;}
+  .spec .dotp.on{background:var(--violet); border-color:var(--violet); transform:scale(1.35);}
+  .spec .seg{flex:1; height:2px; background:var(--line);}
+  .spec-lbl{display:flex; justify-content:space-between; font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px;}
+  .sim-top{display:flex; flex-direction:column; gap:6px;}
+  .sim-top input[type=range]{width:100%; accent-color:var(--violet);}
+  .sim-meta{font-size:14px; color:var(--sub); margin-top:8px;}
+  .sim-meta b{font-family:var(--mono); color:var(--ink);}
+  .sim-bars{display:flex; gap:6px; align-items:flex-end; height:150px; margin:14px 0 10px;}
+  .sim-bar{flex:1; min-width:16px; max-width:64px; height:100%; border:1.5px solid var(--ink); border-radius:4px 4px 0 0; background:var(--bg); display:flex; align-items:flex-end; overflow:hidden;}
+  .sim-fill{width:100%; transition:height .25s, background .25s;}
+  .steps-list{font-family:var(--mono); font-size:12.5px; color:var(--sub); border-top:1px dashed var(--line); padding-top:10px; display:flex; flex-direction:column; gap:4px;}
+  .steps-list .hd{font-family:var(--sans); font-size:14px; font-weight:700; color:var(--ink); margin-bottom:4px;}
+  .vmgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:6px;}
+  .vbox{display:flex; flex-direction:column; gap:3px;}
+  .vl{border:1.5px solid var(--ink); border-radius:5px; padding:7px 8px; font-size:12.5px; font-weight:600; text-align:center;}
+  .vl.app{background:var(--blue-soft); border-color:var(--blue); color:var(--blue);}
+  .vl.lib{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .vl.os{background:var(--amber-soft);}
+  .vl.base{background:var(--bg); border-color:var(--line); color:var(--muted); margin-bottom:3px;}
+  .k8s{border:1.5px dashed var(--ink); border-radius:10px; padding:14px; background:var(--card);}
+  .k8s-nodes{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:10px 0;}
+  .k8s-node{border:1.5px solid var(--ink); border-radius:8px; padding:10px; background:var(--blue-soft); cursor:pointer; user-select:none;}
+  .k8s-node .nn{font-family:var(--mono); font-size:11.5px; font-weight:700; margin-bottom:6px;}
+  .k8s-c{display:inline-block; font-size:11.5px; font-family:var(--mono); background:var(--card); border:1.5px solid var(--violet); color:var(--violet); border-radius:4px; padding:2px 6px; margin:2px 3px 2px 0;}
+  .ev-steps{display:flex; flex-direction:column; gap:6px; margin-top:12px;}
+  .ev-step{border:1.5px solid var(--line); border-radius:6px; padding:8px 12px; font-size:14px; background:var(--bg); opacity:0; transform:translateY(4px); transition:all .25s;}
+  .ev-step.show{opacity:1; transform:none; border-color:var(--violet); background:var(--violet-soft);}
+  .tl{display:grid; grid-template-columns:repeat(12,1fr); gap:3px; margin:6px 0 12px;}
+  .tl .slot{height:34px; border:1.5px solid var(--ink); border-radius:4px; background:var(--bg); cursor:pointer;}
+  .tl .slot.on{background:var(--violet);}
+  .tl.vm .slot{background:var(--amber); cursor:default;}
+  .tl-label{font-family:var(--mono); font-size:11.5px; letter-spacing:.04em; color:var(--sub);}
+  .flow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:12px 0;}
+  .flow .node{border:1.5px solid var(--ink); border-radius:6px; padding:8px 12px; font-size:13px; font-weight:600; background:var(--card);}
+  .flow .arr{font-family:var(--mono); color:var(--muted);}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <a class="backlink" href="index.html">← Class Notes index</a>
+    <div class="kicker">CETE 3370 <span class="dot">·</span> CLOUD COMPUTING <span class="dot">·</span> CLASS 02 <span class="dot">·</span> Module 2</div>
+    <h1 class="title">Build and Manage Cloud Resources</h1>
+    <p class="subtitle">From September 1 — compute options in the cloud, Compute Engine (IaaS), autoscaling for elastic apps, App Engine (PaaS), and the two labs behind Lab Assignment 1.</p>
+    <div class="prompt">lvasq@tamusa:~/cloud-computing#</div>
+  </div>
+</header>
+<div class="wrap">
+
+  <!-- ADMIN -->
+  <section>
+    <span class="badge plain">📌 Admin</span>
+    <h2 class="h">Lab Assignment 1</h2>
+    <div class="house-grid">
+      <div class="house-item"><span class="tag">LABS</span><div>Two labs: <strong>Creating Virtual Machines with Compute Engine</strong> and <strong>App Engine: Qwik Start – Python</strong>. Finishing them is the assignment.</div></div>
+      <div class="house-item"><span class="tag">SHOTS</span><div>Lab 1: the "Welcome to nginx" page from the console-created VM, plus your knowledge-check answer. Lab 2: the deployed page with your custom message, plus its knowledge-check answer. That's at least four screenshots.</div></div>
+      <div class="house-item"><span class="tag">FORMAT</span><div>Put everything in one Word file, save it as a PDF, and submit the PDF in Blackboard. At the top of page one: <strong>CETE 3370, Lab Assignment 1, your name</strong>. A file name like <em>firstname_lastname_lab1</em> works.</div></div>
+      <div class="house-item"><span class="tag">DUE</span><div>The Monday after class. Confirm the exact time in Blackboard.</div></div>
+      <div class="house-item"><span class="tag">NOTE</span><div>Each student's region and zone differ. Follow whatever your lab instructions assign.</div></div>
+    </div>
+  </section>
+
+  <!-- COMPUTE OPTIONS -->
+  <section>
+    <span class="badge risk">Compute Options</span>
+    <h2 class="h">Five Ways to Compute on Google Cloud</h2>
+    <p class="lede">Today's focus is the first two. The other three come next class.</p>
+    <div class="grid-cards" id="options"></div>
+  </section>
+
+  <!-- COMPARE -->
+  <section>
+    <span class="badge blue">Across Providers</span>
+    <h2 class="h">Same Idea, Different Names</h2>
+    <p class="lede">The instructor's go-to table for mapping services between the three big clouds is <a href="https://cloud.google.com/free/docs/aws-azure-gcp-service-comparison" target="_blank" rel="noopener" style="color:var(--blue);">here</a>. You don't need to memorize it, just see the pattern.</p>
+    <div class="scroll-x"><table class="cmp">
+      <tr><th>Model</th><th>Google Cloud</th><th>AWS</th><th>Azure</th></tr>
+      <tr><td>IaaS</td><td>Compute Engine</td><td>Elastic Compute Cloud (EC2)</td><td>Virtual Machines</td></tr>
+      <tr><td>PaaS</td><td>App Engine</td><td>Elastic Beanstalk</td><td>App Service</td></tr>
+      <tr><td>SaaS</td><td colspan="3">Gmail, Google Drive, Dropbox, Slack, WebEx, Zoom</td></tr>
+    </table></div>
+  </section>
+
+  <!-- CE vs AE -->
+  <section>
+    <span class="badge red">IaaS vs PaaS</span>
+    <h2 class="h">Compute Engine vs App Engine</h2>
+    <p class="lede">The difference is control. Pick one and see which layers are yours.</p>
+    <div class="loop-tabs" id="cmpTabs"></div>
+    <div class="card" id="cmpPanel"></div>
+  </section>
+
+  <!-- COMPUTE ENGINE FACTS -->
+  <section>
+    <span class="badge risk">Compute Engine</span>
+    <h2 class="h">Virtual Machines, Rented</h2>
+    <p class="lede">Click a card to flip it.</p>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" id="ceGrid"></div>
+  </section>
+
+  <!-- LAB 1 -->
+  <section>
+    <span class="badge blue">Hands-on Lab 1</span>
+    <h2 class="h">Creating Virtual Machines</h2>
+    <p class="lede">One VM from the Cloud Console, one from the gcloud command line, nginx on the first. Track your progress.</p>
+    <div class="cmd-status">
+      <div style="display:flex; align-items:baseline; gap:8px;">
+        <span class="cmd-count" id="lab1_count">0</span>
+        <span style="font-family:var(--mono); font-size:12px; color:var(--sub);">/ 10 steps</span>
+      </div>
+      <div class="cmd-bar-track"><div class="cmd-bar-fill" id="lab1_bar"></div></div>
+      <button class="ghost-btn" id="lab1_reset">Reset</button>
+    </div>
+    <div id="lab1_list"></div>
+    <div class="cmd-callout">⚠️ <strong>If something looks stuck:</strong> "Check my progress" can lag, and the green check often catches up later. If the nginx page says additional configuration is required, delete the VM and recreate it. A reused name was one suspected cause in class.</div>
+  </section>
+
+  <!-- AUTOSCALING -->
+  <section>
+    <span class="badge red">Elastic Apps</span>
+    <h2 class="h">Autoscaling: Add Servers, Remove Servers</h2>
+    <p class="lede">In a managed instance group, autoscaling adds VMs when average CPU utilization goes <em>above</em> the max target and removes them when it drops <em>below</em> the min target. Targets here: <strong>75% max, 45% min</strong>. Drag the demand, then run the autoscaler.</p>
+    <div class="card">
+      <div class="sim-top">
+        <label for="simLoad"><strong>Total CPU demand</strong> across the group: <span style="font-family:var(--mono);" id="simLoadVal"></span></label>
+        <input type="range" id="simLoad" min="50" max="900" step="5" value="385">
+      </div>
+      <div class="sim-meta">Instances: <b id="simN"></b> · average utilization: <b id="simUtil"></b> · target range: <b>45–75%</b></div>
+      <div class="sim-bars" id="simBars"></div>
+      <div class="steps-list" id="simSteps"></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;">
+        <button class="ghost-btn" id="simApply">Run autoscaler</button>
+        <button class="ghost-btn" id="simOut">Slide example: scale out</button>
+        <button class="ghost-btn" id="simIn">Slide example: scale in</button>
+      </div>
+    </div>
+    <div class="cmd-callout"><strong>The math from the slides.</strong> Scale-out: four VMs at 100/100/85/100% = 385/400 = 96.25%. +1 VM gives 385/500 = 77% (still above 75%), +2 gives 385/600 = 64.2%, so add two. Scale-in: six VMs totaling 205/600 = 34%. −1 gives 41% (still below 45%), −2 gives 51%, so remove two.</div>
+  </section>
+
+  <!-- APP ENGINE -->
+  <section>
+    <span class="badge blue">App Engine</span>
+    <h2 class="h">A Platform-Centric PaaS</h2>
+    <p class="lede">A fully managed environment that saves time and cost by eliminating the need to buy, build, and operate hardware. Click a row to expand it.</p>
+    <div id="aeAcc"></div>
+  </section>
+
+  <section>
+    <span class="badge red">Two Environments</span>
+    <h2 class="h">Standard vs Flexible</h2>
+    <p class="lede">This is where the knowledge check tripped people up. Toggle between them.</p>
+    <div class="loop-tabs" id="envTabs"></div>
+    <div class="card" id="envPanel"></div>
+  </section>
+
+  <!-- LAB 2 -->
+  <section>
+    <span class="badge blue">Hands-on Lab 2</span>
+    <h2 class="h">App Engine: Qwik Start – Python</h2>
+    <p class="lede">Download an app, test it, deploy it, then change the Hello World text. Track your progress.</p>
+    <div class="cmd-status">
+      <div style="display:flex; align-items:baseline; gap:8px;">
+        <span class="cmd-count" id="lab2_count">0</span>
+        <span style="font-family:var(--mono); font-size:12px; color:var(--sub);">/ 7 steps</span>
+      </div>
+      <div class="cmd-bar-track"><div class="cmd-bar-fill" id="lab2_bar"></div></div>
+      <button class="ghost-btn" id="lab2_reset">Reset</button>
+    </div>
+    <div id="lab2_list"></div>
+  </section>
+
+  <!-- FROM THE SLIDES -->
+  <section>
+    <span class="badge risk">From the Slides</span>
+    <h2 class="h">Slide-by-Slide Notes</h2>
+    <p class="lede">Everything on the Module 2 deck, grouped the way the agenda runs, including the speaker notes. Click a row to expand it.</p>
+    <div id="slideNotes"></div>
+  </section>
+
+  <section>
+    <span class="badge blue">Vocabulary</span>
+    <h2 class="h">Terms to Know</h2>
+    <p class="lede">Worded from the slides wherever possible.</p>
+    <div class="scroll-x"><table class="cmp">
+      <tr><th>Term</th><th>Meaning</th></tr>
+      <tr><td>IaaS</td><td style="font-weight:400;">Rent infrastructure: servers, VMs, networking, storage. You control OS, machine types, memory and firewall. Pay for what you allocate.</td></tr>
+      <tr><td>PaaS</td><td style="font-weight:400;">A ready platform: you focus on application code and its data. Pay for what you use.</td></tr>
+      <tr><td>SaaS</td><td style="font-weight:400;">A finished application consumed over the internet, e.g., Gmail.</td></tr>
+      <tr><td>Virtual machine (VM)</td><td style="font-weight:400;">A computer in software with the functionality of a full operating system, configured like a physical server.</td></tr>
+      <tr><td>Compute Engine</td><td style="font-weight:400;">Google's IaaS for creating and running VMs.</td></tr>
+      <tr><td>gcloud</td><td style="font-weight:400;">The Google Cloud command-line tool, the alternative to the Cloud Console for creating VMs.</td></tr>
+      <tr><td>Image</td><td style="font-weight:400;">The OS a VM runs: Linux or Windows Server images, or customized versions of them.</td></tr>
+      <tr><td>Managed instance group</td><td style="font-weight:400;">The group of VM instances an autoscaler grows or shrinks.</td></tr>
+      <tr><td>Autoscaling</td><td style="font-weight:400;">Automatically adding or removing VMs to match demand.</td></tr>
+      <tr><td>Scale out</td><td style="font-weight:400;">Add instances when average CPU utilization is above the max target.</td></tr>
+      <tr><td>Scale in</td><td style="font-weight:400;">Remove instances when average CPU utilization is below the min target.</td></tr>
+      <tr><td>Max / min target CPU utilization</td><td style="font-weight:400;">75% and 45% in the slide examples.</td></tr>
+      <tr><td>Health check</td><td style="font-weight:400;">An automatic test of whether a VM, app, container or service is running correctly and can handle requests.</td></tr>
+      <tr><td>Memcache</td><td style="font-weight:400;">The built-in memory caching service in App Engine.</td></tr>
+      <tr><td>NoSQL datastore</td><td style="font-weight:400;">A built-in App Engine storage service.</td></tr>
+      <tr><td>SDK</td><td style="font-weight:400;">App Engine's software development kit: APIs and libraries, a sandbox environment, and deployment tools.</td></tr>
+      <tr><td>Sandbox</td><td style="font-weight:400;">The constrained runtime environment a Standard-environment app must conform to.</td></tr>
+      <tr><td>Standard environment</td><td style="font-weight:400;">App Engine on preconfigured containers, with specified language versions.</td></tr>
+      <tr><td>Flexible environment</td><td style="font-weight:400;">App Engine on custom containers; supply a Docker image or Dockerfile.</td></tr>
+    </table></div>
+  </section>
+
+  <!-- KNOWLEDGE CHECK -->
+  <section>
+    <span class="badge red">Knowledge Check</span>
+    <h2 class="h">Module 2 Knowledge Check, Replayed</h2>
+    <p class="lede">The 8 questions from class. You got 5 of 8 on the original, and the misses are tagged after you answer. Your screenshots only showed what you picked, so the correct answers here come from the slides rather than the grader.</p>
+    <div id="kc_container"></div>
+    <div id="kc_bar" class="quizbar">
+      <span><span id="kc_score">0</span>/8 correct</span>
+      <button id="kc_reset">Reset</button>
+    </div>
+    <div class="pair-grid">
+      <div class="card pair-card"><div class="label">Mix-up #1 (Q1, Q6)</div><p><strong>Compute Engine</strong> = IaaS (VMs you configure).</p><p><strong>App Engine</strong> = PaaS (you just bring code).</p><p><strong>Gmail, Drive</strong> = SaaS.</p></div>
+      <div class="card pair-card"><div class="label">Mix-up #2 (Q8)</div><p><strong>Standard</strong> = preconfigured containers, set runtimes, sandbox.</p><p><strong>Flexible</strong> = custom containers (Docker image or Dockerfile).</p></div>
+    </div>
+  </section>
+
+  <!-- SLIDE CHECK -->
+  <section>
+    <span class="badge risk">Slide Check</span>
+    <h2 class="h">Questions From the Slides</h2>
+    <p class="lede">8 extra questions written from the deck itself, since slide wording is what tends to show up on exams. These are mine, not your instructor's.</p>
+    <div id="sc_container"></div>
+    <div id="sc_bar" class="quizbar">
+      <span><span id="sc_score">0</span>/8 correct</span>
+      <button id="sc_reset">Reset</button>
+    </div>
+  </section>
+
+  <!-- CHEAT SHEET -->
+  <section>
+    <span class="badge plain">Cheat Sheet</span>
+    <h2 class="h">The Five-Minute-Before-The-Exam Version</h2>
+    <div class="cheat-grid">
+      <div class="card cheat-card"><div class="label">Compute options</div><p>Compute Engine (IaaS) · App Engine (PaaS) · GKE (hybrid) · Cloud Run (serverless platform) · Cloud Functions (serverless logic).</p></div>
+      <div class="card cheat-card"><div class="label">Compute Engine</div><p>VMs with a full OS. Set CPU, memory, storage, OS. Create via Cloud Console or gcloud. Pay for what you allocate.</p></div>
+      <div class="card cheat-card"><div class="label">Autoscaling</div><p>Above max target (75%): scale out. Below min target (45%): scale in. Utilization = total load ÷ (instances × 100).</p></div>
+      <div class="card cheat-card"><div class="label">App Engine</div><p>Fully managed PaaS: no servers, auto scaling and load balancing, built-in datastore, memcache, logging, auth.</p></div>
+      <div class="card cheat-card"><div class="label">Standard</div><p>Preconfigured containers. Specific Java, Python, PHP, Go, Node.js, Ruby versions. Must obey the sandbox.</p></div>
+      <div class="card cheat-card"><div class="label">Flexible</div><p>Custom containers. Custom runtime and OS via Docker image or Dockerfile. Instances restarted weekly.</p></div>
+    </div>
+  </section>
+
+</div>
+
+<footer>CETE 3370 — Class 2 · Fall 2026 <br><span id="footerStatus"></span></footer>
+
+<script>
+
+function lsGet(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+function onAct(n,fn){ n.setAttribute('role','button'); n.setAttribute('tabindex','0'); n.addEventListener('click',fn); n.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); fn(); } }); }
+
+function buildFlip(container, items){
+  items.forEach(e=>{
+    const card=document.createElement('div');
+    card.className='flip-card group [perspective:1200px] cursor-pointer select-none';
+    card.setAttribute('role','button'); card.setAttribute('tabindex','0'); card.setAttribute('aria-pressed','false');
+    card.innerHTML=`
+      <div class="flip-inner grid transition-transform duration-700 [transform-style:preserve-3d]" style="transform:rotateY(0deg);">
+        <div class="col-start-1 row-start-1 [backface-visibility:hidden] flex flex-col justify-center gap-2 rounded-lg border-[1.5px] border-[#16150f] bg-[#fffdf7] p-4 min-h-[150px] shadow-[3px_3px_0_rgba(22,21,15,0.08)] transition-shadow duration-300 group-hover:shadow-[5px_5px_0_rgba(22,21,15,0.12)]">
+          <div class="font-mono text-[28px] font-bold" style="color:var(--violet); opacity:.75;">0${e.n}</div>
+          <div class="text-[15px] font-bold text-[#16150f] leading-snug">${e.title}</div>
+        </div>
+        <div class="col-start-1 row-start-1 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col justify-center rounded-lg border-[1.5px] border-[#16150f] p-4 min-h-[150px] text-[13.5px] text-[#f6f3ec]" style="background:var(--violet);">
+          <p class="leading-snug">${e.back}</p>
+        </div>
+      </div>`;
+    const inner=card.querySelector('.flip-inner');
+    function toggle(){ const f=card.getAttribute('aria-pressed')==='true'; card.setAttribute('aria-pressed',String(!f)); inner.style.transform=f?'rotateY(0deg)':'rotateY(180deg)'; }
+    card.addEventListener('click',toggle);
+    card.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); toggle(); } });
+    container.appendChild(card);
+  });
+}
+
+function buildAcc(container, items){
+  items.forEach(a=>{
+    const item=document.createElement('div');
+    item.className='acc-item';
+    item.innerHTML=`<div class="acc-head"><strong>${a.title}</strong><span class="acc-plus">+</span></div>
+      <div class="acc-body">${a.html?`<div class="acc-rich">${a.html}</div>`:`<p>${a.body}</p>`}${a.chips&&a.chips.length?`<div class="chips">${a.chips.map(c=>`<span class="tag-chip">${c}</span>`).join('')}</div>`:''}</div>`;
+    onAct(item,()=>item.classList.toggle('open'));
+    container.appendChild(item);
+  });
+}
+
+function makeTabs(tabsEl, panelEl, items, renderPanel, startId, after){
+  let active=startId||items[0].id;
+  function draw(){
+    tabsEl.innerHTML='';
+    items.forEach(it=>{
+      const b=document.createElement('div');
+      b.className='loop-tab '+(it.cls||'')+(active===it.id?' active':'');
+      b.textContent=it.label;
+      onAct(b,()=>{ active=it.id; draw(); });
+      tabsEl.appendChild(b);
+    });
+    const cur=items.find(i=>i.id===active);
+    panelEl.innerHTML=renderPanel(cur);
+    if(after) after(panelEl,cur);
+  }
+  draw();
+}
+
+function makeChecklist(o){
+  let done=lsGet(o.key,{});
+  function n(){ return Object.values(done).filter(Boolean).length; }
+  function render(){
+    o.list.innerHTML='';
+    o.steps.forEach((s,i)=>{
+      const d=!!done[i];
+      const item=document.createElement('div');
+      item.className='cmd-item'+(d?' done':'');
+      item.innerHTML=`<div class="cmd-check">${d?'✓':''}</div><p>${s.t}${s.d?`<span class="cmd-detail">${s.d}</span>`:''}</p>`;
+      item.addEventListener('click',()=>{ done[i]=!d; lsSet(o.key,done); render(); if(o.onChange) o.onChange(); });
+      o.list.appendChild(item);
+    });
+    o.count.textContent=n();
+    o.bar.style.width=(n()/o.steps.length*100)+'%';
+  }
+  o.reset.addEventListener('click',()=>{ done={}; lsSet(o.key,done); render(); if(o.onChange) o.onChange(); });
+  render();
+  return {count:n,total:o.steps.length};
+}
+
+function makeQuiz(data, container, scoreEl, resetBtn, onChange){
+  const answers={};
+  function score(){ return Object.keys(answers).filter(k=>answers[k]===data[k].correct).length; }
+  function render(){
+    container.innerHTML='';
+    data.forEach((q,qi)=>{
+      const card=document.createElement('div');
+      card.className='quiz-card';
+      const answered=answers[qi]!==undefined;
+      const mine=(answered&&q.mine!==undefined)?`<div class="quiz-mine ${q.mine===q.correct?'ok':'no'}">In class you picked: ${q.opts[q.mine]} ${q.mine===q.correct?'✓':'✗'}</div>`:'';
+      card.innerHTML=`
+        <div class="quiz-q">${qi+1}. ${q.q}</div>
+        <div class="quiz-opts">
+          ${q.opts.map((o,oi)=>{
+            let cls='quiz-opt';
+            if(answered){ if(oi===q.correct) cls+=' correct'; else if(oi===answers[qi]) cls+=' wrong'; }
+            return `<button class="${cls}" data-qi="${qi}" data-oi="${oi}" ${answered?'disabled':''}>${o}</button>`;
+          }).join('')}
+        </div>
+        <div class="quiz-why ${answered?'show':''}">${q.why}${mine?'<br>'+mine:''}</div>`;
+      container.appendChild(card);
+    });
+    container.querySelectorAll('.quiz-opt').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const qi=btn.dataset.qi;
+        if(answers[qi]!==undefined) return;
+        answers[qi]=parseInt(btn.dataset.oi);
+        render(); scoreEl.textContent=score(); onChange();
+      });
+    });
+  }
+  resetBtn.addEventListener('click',()=>{ Object.keys(answers).forEach(k=>delete answers[k]); render(); scoreEl.textContent=score(); onChange(); });
+  render(); scoreEl.textContent=score();
+  return {score};
+}
+
+// ---------- Data ----------
+const options = [
+  {name:"Compute Engine", tag:"IaaS", today:true, d:"Virtual machines with industry-leading price/performance, for general workloads that need dedicated resources."},
+  {name:"App Engine", tag:"PaaS", today:true, d:"A flexible platform for building scalable applications on a fully managed platform."},
+  {name:"Google Kubernetes Engine", tag:"Hybrid", today:false, d:"Cluster manager and orchestration engine built on Google's container experience."},
+  {name:"Cloud Run", tag:"Serverless platform", today:false, d:"A fully managed serverless platform for developing and deploying scalable containerized applications."},
+  {name:"Cloud Functions", tag:"Serverless logic", today:false, d:"A lightweight, fully managed serverless environment for running code based on events."}
+];
+const layerNames = ["Application","Runtime & libraries","Operating system","Virtualization & servers","Storage & networking"];
+const cmp = [
+  {id:"ce", cls:"t-red", label:"Compute Engine", title:"Compute Engine: IaaS", you:[true,true,true,false,false],
+   desc:"You rent VMs and configure them like physical servers: machine type, memory size, GPUs, operating system, firewall settings, middleware, runtime, data and applications.",
+   pay:"Pay for what you allocate", use:"General workloads that need dedicated resources: web-server hosting, application hosting, application backends."},
+  {id:"ae", cls:"t-blue", label:"App Engine", title:"App Engine: PaaS", you:[true,false,false,false,false],
+   desc:"The environment is already built. You focus on application development and its data; machine types, OS and hardware are the platform's problem.",
+   pay:"Pay for what you use", use:"Scalable applications where you'd rather write code than operate servers."}
+];
+const ceFacts = [
+  {n:1, title:"No upfront investment", back:"VMs run on a system designed to be fast and consistent. You rent capacity instead of buying hardware."},
+  {n:2, title:"A full OS in every VM", back:"Each VM has the power and functionality of a full-fledged operating system."},
+  {n:3, title:"Configured like a physical server", back:"Choose the CPU power (and GPUs), memory, the amount and type of storage, and the operating system."},
+  {n:4, title:"What it runs", back:"Web-server hosting, application hosting, and application backends."},
+  {n:5, title:"Linux, Windows, or custom", back:"Run Linux and Windows Server images or customized versions of them. You can also build and run images of other operating systems and reconfigure VMs flexibly."},
+  {n:6, title:"Two ways to create one", back:"The Google Cloud Console, or the gcloud command-line tool."}
+];
+const aeAcc = [
+  {title:"Why it's PaaS", body:"No need to buy, build, or operate hardware. No managing servers or configuring deployments. Focus on app development instead of operations, with a range of languages and tools and automatic scaling.", chips:[]},
+  {title:"Built-in services and APIs", body:"A full range of built-in services come with it. A health check is an automatic test of whether a VM, application, container or service is running correctly and can handle requests.", chips:["NoSQL datastores","Memcache","Load balancing","Health checks","Application logging","User authentication API"]},
+  {title:"SDKs", body:"App Engine offers software development kits. Each SDK includes:", chips:["APIs and libraries","Sandbox environment","Deployment tools"]}
+];
+const envs = [
+  {id:"std", cls:"t-blue", label:"Standard", title:"Standard environment: preconfigured containers",
+   pts:["Persistent storage with queries, sorting, and transactions","Automatic scaling and load balancing","Asynchronous task queues for work outside a request","Scheduled tasks that trigger events at regular intervals","Integration with other Google Cloud services and APIs"],
+   req:["Use specified versions of Java, Python, PHP, Go, Node.js, and Ruby","App must conform to sandbox constraints, which depend on the runtime"],
+   flow:["Develop web app and test locally","Deploy to App Engine with the SDK","App Engine scales and services the app"]},
+  {id:"flex", cls:"t-red", label:"Flexible", title:"Flexible environment: custom containers",
+   pts:["Instances are health-checked and co-located","Critical updates are applied automatically to the underlying OS","VM instances are located by geographic region per your project settings","VM instances are restarted weekly"],
+   req:["Take advantage of custom configurations and libraries while focusing on code","Customize the runtime and OS: different versions of Python, Java, Go, Node.js, PHP, .NET, Ruby","Customize or provide runtimes with a custom Docker image or Dockerfile"],
+   flow:[]}
+];
+const lab1Steps = [
+  {t:"Start the lab and open Cloud Console", d:"Sign in with your university email and launch with 1 credit. Right-click the green Console button and choose <em>Open link in split view</em> so the instructions and console sit side by side."},
+  {t:"Activate Cloud Shell and set your region and zone", d:"Copy the region and zone commands from your lab. They differ per student, and you'll reuse <code>$ZONE</code> later."},
+  {t:"Console: Navigation menu → Compute Engine → VM instances → Create instance", d:"Name it as the lab says (<code>gcelab</code>)."},
+  {t:"Machine configuration", d:"Region and zone matching your variables. Machine type <code>e2-medium</code> (2 vCPU, 4 GB memory)."},
+  {t:"OS and storage → Change", d:"Debian GNU/Linux 12 (bookworm), balanced persistent disk, 10 GB, then Select."},
+  {t:"Networking: allow HTTP traffic, then Create", d:"Wait for the green check beside the new instance."},
+  {t:"SSH in and install nginx", d:"Click SSH, then Authorize. Run <code>sudo apt-get update</code> and <code>sudo apt-get install -y nginx</code>, then confirm the server is running."},
+  {t:"Screenshot 1: Welcome to nginx", d:"Click the VM's External IP link and capture the page from the console-created VM."},
+  {t:"Create the second VM with gcloud", d:"<code>gcloud compute instances create gcelab2 --machine-type e2-medium --zone $ZONE</code>. Both VMs should appear in the list. gcelab2 has no working page since nginx isn't installed there."},
+  {t:"Screenshot 2: Test your knowledge", d:"\"Through which of the following ways can you create a VM instance in Compute Engine?\" Choose Cloud Console and gcloud, submit, and capture it with your name visible."}
+];
+const lab2Steps = [
+  {t:"Start the App Engine: Qwik Start – Python lab", d:"Same routine: launch with 1 credit, open the console, activate Cloud Shell."},
+  {t:"Download the application", d:""},
+  {t:"Test the application", d:""},
+  {t:"Deploy it to App Engine", d:"The deployed page shows <em>Hello World</em>."},
+  {t:"Change the Hello World text to your assigned message", d:"The exact message is in the Blackboard assignment. Redeploy."},
+  {t:"Screenshots 3 and 4", d:"3: the deployed page with the new message. 4: your knowledge-check answers."},
+  {t:"Assemble and submit", d:"One Word doc with all screenshots (CETE 3370, Lab Assignment 1, your name on top), saved as a PDF and submitted in Blackboard."}
+];
+const kcData = [
+  {q:"Which compute service would be considered IaaS?", opts:["Compute Engine","App Engine","Cloud Function","Cloud Run"], correct:0, mine:1, why:"Compute Engine is the IaaS option: you rent VMs. App Engine is PaaS, Cloud Run is a serverless platform, and Cloud Functions is serverless logic."},
+  {q:"Which statement best describes a virtual machine (VM) in Compute Engine?", opts:["It can only run web applications","It contains the functionality of a full operating system","It does not require CPU or memory","It can only run Linux"], correct:1, mine:1, why:"Each VM has the power and functionality of a full-fledged OS. It runs Linux or Windows Server images and more."},
+  {q:"What is the Compute Engine feature that allows VMs to be added to or subtracted from an application based on load metrics?", opts:["Persistent Disk","Network time protocol","Autoscaling","Load balancing"], correct:2, mine:2, why:"Autoscaling adds or removes VMs in a managed instance group based on load, such as average CPU utilization."},
+  {q:"Which two methods can be used to create a Compute Engine VM?", opts:["Google Cloud Console and gcloud command-line tool","App Engine and Cloud Functions","Gmail and Google Drive","Kubernetes and Docker only"], correct:0, mine:0, why:"Both labs used exactly these: the Cloud Console for gcelab and the gcloud tool for gcelab2."},
+  {q:"If CPU utilization becomes too high in a managed instance group, what can autoscaling do?", opts:["Delete the application","Add more VM instances","Disable the network","Reduce application storage"], correct:1, mine:1, why:"Above the max target utilization, autoscaling scales out by adding instances until the average drops below the target."},
+  {q:"App Engine is primarily an example of which cloud service model?", opts:["SaaS","IaaS","PaaS"], correct:2, mine:0, why:"App Engine is a PaaS: the platform handles hardware and runtime so you focus on the application. Gmail and Drive are SaaS."},
+  {q:"Which is a major benefit of using App Engine?", opts:["Developers must manually manage servers","Developers can focus on application development instead of infrastructure operations","Applications cannot automatically scale","Developers must purchase their own hardware"], correct:1, mine:1, why:"No servers to manage, no hardware to buy, automatic scaling: the focus stays on app development."},
+  {q:"Which App Engine environment is based on preconfigured container instances?", opts:["Standard environment","Flexible environment"], correct:0, mine:1, why:"Standard runs preconfigured containers. Flexible uses custom containers (your own Docker image or Dockerfile)."}
+];
+
+// ---------- Options ----------
+const optEl=document.getElementById('options');
+options.forEach(o=>{
+  const c=document.createElement('div');
+  c.className='card mini';
+  c.style.opacity=o.today?'1':'.7';
+  c.innerHTML=`<span class="tag-chip" style="${o.today?'border-color:var(--violet); color:var(--violet);':''}">${o.tag}</span><h3 style="margin-top:8px;">${o.name}</h3><p>${o.d}</p><p style="font-family:var(--mono); font-size:11px;">${o.today?'TODAY':'NEXT CLASS'}</p>`;
+  optEl.appendChild(c);
+});
+
+// ---------- Compare tabs ----------
+makeTabs(document.getElementById('cmpTabs'), document.getElementById('cmpPanel'), cmp, a=>`
+  <strong style="font-size:18px;">${a.title}</strong>
+  <p style="color:var(--sub); margin:8px 0 4px;">${a.desc}</p>
+  <div class="stack">${layerNames.map((n,i)=>`<div class="layer ${a.you[i]?'you':'them'}"><span>${n}</span><small>${a.you[i]?'You manage':'Provider'}</small></div>`).join('')}</div>
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;"><span class="tag-chip">${a.pay}</span></div>
+  <div class="ex-row"><strong>Good for</strong><span>${a.use}</span></div>`);
+
+buildFlip(document.getElementById('ceGrid'), ceFacts);
+buildAcc(document.getElementById('aeAcc'), aeAcc);
+
+// ---------- Env tabs ----------
+makeTabs(document.getElementById('envTabs'), document.getElementById('envPanel'), envs, e=>`
+  <strong style="font-size:18px;">${e.title}</strong>
+  <ul class="tight">${e.pts.map(p=>`<li>${p}</li>`).join('')}</ul>
+  <div style="font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--violet); margin-top:12px;">${e.id==='std'?'Two requirements':'Advantages'}</div>
+  <ul class="tight">${e.req.map(p=>`<li>${p}</li>`).join('')}</ul>
+  ${e.flow.length?`<div class="flow">${e.flow.map((f,i)=>`<span class="node">${f}</span>${i<e.flow.length-1?'<span class="arr">→</span>':''}`).join('')}</div>`:''}`);
+
+// ---------- Autoscaling sim ----------
+let simN=4, simL=385;
+const SIM_MAX=75, SIM_MIN=45;
+const pctOf=n=>simL/n;
+const fmt=x=>Number(x.toFixed(2));
+function simPlan(){
+  const steps=[]; let cur=simN;
+  steps.push({n:cur,p:pctOf(cur),label:'Now'});
+  if(pctOf(cur)>SIM_MAX){
+    while(pctOf(cur)>SIM_MAX && cur<60){ cur++; steps.push({n:cur,p:pctOf(cur),label:'+'+(cur-simN)}); }
+    return {dir:'out',final:cur,steps};
+  }
+  if(pctOf(cur)<SIM_MIN && cur>1){
+    while(cur>1 && pctOf(cur)<SIM_MIN && pctOf(cur-1)<=SIM_MAX){ cur--; steps.push({n:cur,p:pctOf(cur),label:'−'+(simN-cur)}); }
+    return {dir:cur<simN?'in':'none',final:cur,steps};
+  }
+  return {dir:'none',final:cur,steps};
+}
+function renderSim(){
+  document.getElementById('simLoadVal').textContent=simL;
+  document.getElementById('simN').textContent=simN;
+  const u=pctOf(simN);
+  document.getElementById('simUtil').textContent=fmt(u)+'%';
+  const color=u>SIM_MAX?'var(--red)':(u<SIM_MIN?'var(--amber)':'var(--good)');
+  document.getElementById('simBars').innerHTML=Array.from({length:simN}).map(()=>`<div class="sim-bar"><div class="sim-fill" style="height:${Math.min(100,u)}%; background:${color};"></div></div>`).join('');
+  const plan=simPlan();
+  let out='';
+  if(plan.dir==='out') out+='<div class="hd">Scale out: average CPU is above the 75% max target, so add instances</div>';
+  else if(plan.dir==='in') out+='<div class="hd">Scale in: average CPU is below the 45% min target, so remove instances</div>';
+  else if(u<SIM_MIN && simN===1) out+='<div class="hd">Below the minimum, but one instance is the floor: nothing to remove</div>';
+  else out+='<div class="hd">Inside the 45–75% range: no change</div>';
+  plan.steps.forEach((s,i)=>{
+    let verdict='';
+    if(plan.dir==='out') verdict=s.p>SIM_MAX?'still above 75%':'within target';
+    else if(plan.dir==='in') verdict=s.p<SIM_MIN?'still below 45%':'within target';
+    out+=`<div>${s.label}: ${simL}/${s.n*100} = ${fmt(s.p)}%${verdict?' ('+verdict+')':''}</div>`;
+  });
+  document.getElementById('simSteps').innerHTML=out;
+}
+document.getElementById('simLoad').addEventListener('input',e=>{ simL=parseInt(e.target.value); renderSim(); });
+document.getElementById('simApply').addEventListener('click',()=>{ simN=simPlan().final; renderSim(); });
+function preset(n,l){ simN=n; simL=l; document.getElementById('simLoad').value=l; renderSim(); }
+document.getElementById('simOut').addEventListener('click',()=>preset(4,385));
+document.getElementById('simIn').addEventListener('click',()=>preset(6,205));
+renderSim();
+
+const slideNotes = [{"title": "Module overview, objectives and agenda (slides 1\u20134)", "html": "<ul><li><strong>Module 2: Compute.</strong> Compute Engine = IaaS, App Engine = PaaS.</li><li>Three hands-on labs: (1) create a VM with Compute Engine via Cloud Console and command line, (2) App Engine: Qwik Start \u2013 Python, (3) deploy a simple application with App Engine. Then a knowledge check.</li><li>Objectives: explore the role of compute options in the cloud; learn about building and managing VMs with Compute Engine; examine building elastic applications using autoscaling; explore PaaS options by leveraging App Engine.</li><li>Agenda order: three service models \u00b7 compute options in the cloud \u00b7 exploring IaaS with Compute Engine \u00b7 lab: creating a VM \u00b7 configuring elastic apps with autoscaling \u00b7 exploring PaaS with App Engine \u00b7 lab: App Engine Qwik Start \u2013 Python \u00b7 knowledge check.</li></ul>"}, {"title": "Service models (slide 5)", "html": "<ul><li><strong>IaaS</strong> (speaker note): rent access to cloud infrastructure resources including servers, virtual machines, networking resources, and storage. AWS EC2 \u00b7 Google Compute Engine \u00b7 Azure Virtual Machines.</li><li><strong>PaaS:</strong> AWS Elastic Beanstalk \u00b7 Google App Engine \u00b7 Azure App Services.</li><li><strong>SaaS:</strong> Gmail, Google Drive \u00b7 Dropbox, Slack \u00b7 WebEx, Zoom.</li><li>The slide links the AWS / Google Cloud / Azure service comparison: cloud.google.com/free/docs/aws-azure-gcp-service-comparison.</li></ul>"}, {"title": "Google Cloud compute services (slides 8, 10, 20)", "html": "<p>The slide pairs each service with a one-line description and a category tag.</p><ul><li><strong>Compute Engine (IaaS):</strong> virtual machines with industry-leading price/performance, for general workloads that require dedicated resources for your applications.</li><li><strong>App Engine (PaaS):</strong> a flexible platform for building scalable applications on a fully managed platform.</li><li><strong>Google Kubernetes Engine (Hybrid):</strong> cluster manager and orchestration engine built on Google's container experience, to run containers on a managed Kubernetes platform.</li><li><strong>Cloud Run (Serverless platform):</strong> a fully managed serverless platform for developing and deploying scalable containerized applications.</li><li><strong>Cloud Functions (Serverless logic):</strong> a lightweight, fully managed serverless execution environment for building and connecting cloud services, to run code based on some events.</li></ul>"}, {"title": "Compute Engine (slides 11\u201312)", "html": "<ul><li>No upfront investments.</li><li>VMs can run on a system that's designed to be fast and offer consistent performance.</li><li>Each VM contains the power and functionality of a full-fledged operating system.</li><li>Run computing workloads such as web-server hosting, application hosting, and/or application backends.</li><li><em>Speaker note:</em> a VM can be configured much like a physical server, by specifying the amount of CPU power and memory, the amount and type of storage, and the operating system.</li><li>VMs are flexible resources and can be created via the Google Cloud Console and the gcloud command-line tool.</li><li>They can run Linux and Windows Server images, or any customized versions of these. You can also build and run images of other operating systems and flexibly reconfigure VMs.</li></ul>"}, {"title": "Autoscaling (slides 16\u201318)", "html": "<ul><li><strong>Use autoscaling for resilient, scalable applications.</strong> Use big VMs for big memory- and compute-intensive applications. VMs can be autoscaled to meet demand.</li><li><strong>Scale-out decision</strong> (speaker note: add more servers): actual utilization = 385/400 = 96.25%. If +1, 385/500 = 77%, still above the 75% target. If +2, 385/600 = 64.16%. Max target CPU utilization = 75%.</li><li><strong>Scale-in decision</strong> (speaker note: determine threshold): actual utilization = 205/600 = 34%. If \u22121, 205/500 = 41%, still below target. If \u22122, 205/400 = 51%. Min target CPU utilization = 0.45 = 45%.</li><li>Both examples show a <em>managed instance group</em> with per-VM utilization on each box. The formula is total utilization \u00f7 (number of VMs \u00d7 100%).</li></ul>"}, {"title": "App Engine: a platform-centric PaaS (slides 21\u201323)", "html": "<ul><li>Type of PaaS. No need to buy, build, or operate hardware/infrastructure. No managing servers or configuring deployments. Focus on app development instead of operations. Use a range of languages and tools. Automatic scaling.</li><li><em>Speaker note:</em> a fully managed environment can save organizations time and cost by eliminating the need to buy, build, and operate computing hardware and other infrastructure.</li><li>Built-in services and APIs: NoSQL datastores, Memcache, load balancing, health checks, application logging, user authentication API. <em>Health check</em> = an automatic test used to determine whether a VM, application, container or service is running correctly and able to handle requests.</li><li>SDKs: each includes APIs and libraries, a sandbox environment, and deployment tools.</li></ul>"}, {"title": "Standard environment (slides 24\u201327)", "html": "<ul><li>Two types of App Engine environments: Standard and Flexible.</li><li><strong>Standard runs preconfigured containers.</strong></li><li>Features: persistent storage with queries, sorting, and transactions \u00b7 automatic scaling and load balancing \u00b7 asynchronous task queues for work outside the scope of a request \u00b7 scheduled tasks for triggering events at regular intervals \u00b7 integration with other Google Cloud services and APIs.</li><li><strong>Two requirements:</strong> use specified versions of Java, Python, PHP, Go, Node.js, and Ruby; and the app must conform to sandbox constraints that depend on the runtime.</li><li><strong>Workflow:</strong> develop the web app and test locally \u2192 deploy to App Engine with the SDK \u2192 App Engine scales and services the app.</li></ul>"}, {"title": "Flexible environment (slides 28\u201329)", "html": "<ul><li><strong>Flexible uses custom containers.</strong></li><li>Instances are health-checked and co-located. Critical updates are automatically applied to the underlying OS. VM instances are automatically located by geographic region according to the settings in your project. VM instances are restarted on a weekly basis.</li><li>Advantages: take advantage of custom configurations and libraries while focusing on writing code. Customize the runtime and the OS of your VM, with different versions of Python, Java, Go, Node.js, PHP, .NET, and Ruby. Customize or provide runtimes by supplying a custom Docker image or Dockerfile.</li></ul>"}, {"title": "Labs on the slides (slides 14, 31)", "html": "<ul><li><strong>Lab 1: Creating Virtual Machines with Compute Engine.</strong> Create a VM with the Cloud Console. Create a VM with the gcloud command line. Deploy a web server and connect it to a VM.</li><li><strong>Lab 2: App Engine Standard: Qwik Start \u2013 Python.</strong> Download an application. Test the application. Deploy the application.</li></ul>"}];
+const scData = [{"q": "Per the speaker note on the service-models slide, what does IaaS let you do?", "opts": ["Rent access to servers, VMs, networking resources and storage", "Use finished apps in a browser", "Write code with no access to infrastructure at all", "Buy and own physical hardware"], "correct": 0, "why": "IaaS: rent access to cloud infrastructure resources including servers, virtual machines, networking resources, and storage."}, {"q": "Which category does the compute-services slide give Google Kubernetes Engine?", "opts": ["IaaS", "PaaS", "Hybrid", "Serverless logic"], "correct": 2, "why": "Compute Engine = IaaS, App Engine = PaaS, GKE = Hybrid, Cloud Run = Serverless platform, Cloud Functions = Serverless logic."}, {"q": "In the slide's scale-out example (385/400 = 96.25%), how many VMs are added to get under the 75% target?", "opts": ["1 (77%)", "2 (about 64%)", "3", "None"], "correct": 1, "why": "+1 gives 385/500 = 77%, still above 75%. +2 gives 385/600 = 64.16%, so add two."}, {"q": "In the slide's scale-in example (205/600 = 34%, min target 45%), how many VMs are removed?", "opts": ["0", "1 (41%)", "2 (51%)", "3"], "correct": 2, "why": "\u22121 gives 205/500 = 41%, still below 45%. \u22122 gives 205/400 = 51%, so remove two."}, {"q": "Which of these is NOT listed as a built-in App Engine service?", "opts": ["Memcache", "Application logging", "Physical server provisioning", "User authentication API"], "correct": 2, "why": "The slide lists NoSQL datastores, Memcache, load balancing, health checks, application logging and a user authentication API."}, {"q": "What are the two requirements of the App Engine standard environment?", "opts": ["Use specified language versions, and conform to sandbox constraints", "Supply a Dockerfile, and manage the OS yourself", "Use only Windows Server images, and a custom kernel", "Provision your own VMs, and your own load balancer"], "correct": 0, "why": "Standard needs specified versions of Java, Python, PHP, Go, Node.js and Ruby, plus compliance with runtime-dependent sandbox constraints."}, {"q": "How often are App Engine flexible environment VM instances restarted?", "opts": ["Daily", "Weekly", "Monthly", "Never"], "correct": 1, "why": "Flexible instances are restarted on a weekly basis, and critical OS updates are applied automatically."}, {"q": "Each Compute Engine VM contains the power and functionality of what?", "opts": ["A single application", "A container runtime", "A full-fledged operating system", "A serverless function"], "correct": 2, "why": "Each VM has the functionality of a full-fledged OS, and can be configured like a physical server."}];
+buildAcc(document.getElementById('slideNotes'), slideNotes);
+const sc = makeQuiz(scData, document.getElementById('sc_container'), document.getElementById('sc_score'), document.getElementById('sc_reset'), ()=>updateFooter());
+// ---------- Checklists + quiz ----------
+const lab1 = makeChecklist({list:document.getElementById('lab1_list'), count:document.getElementById('lab1_count'), bar:document.getElementById('lab1_bar'), reset:document.getElementById('lab1_reset'), steps:lab1Steps, key:'cloud-w2-lab1', onChange:()=>updateFooter()});
+const lab2 = makeChecklist({list:document.getElementById('lab2_list'), count:document.getElementById('lab2_count'), bar:document.getElementById('lab2_bar'), reset:document.getElementById('lab2_reset'), steps:lab2Steps, key:'cloud-w2-lab2', onChange:()=>updateFooter()});
+const kc = makeQuiz(kcData, document.getElementById('kc_container'), document.getElementById('kc_score'), document.getElementById('kc_reset'), ()=>updateFooter());
+
+function updateFooter(){
+  document.getElementById('footerStatus').textContent=`${lab1.count()}/${lab1.total} lab 1 steps · ${lab2.count()}/${lab2.total} lab 2 steps · ${kc.score()}/${kcData.length} on the knowledge check · ${sc.score()}/${scData.length} on the slide check`;
+}
+updateFooter();
+</script>
+</body>
+</html>

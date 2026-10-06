@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CETE 3370 · Class 04 · Security and Identity Fundamentals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --bg:#f6f3ec;
+    --ink:#16150f;
+    --sub:#454236;
+    --muted:#6a6656;
+    --line:#cfc9b6;
+    --card:#fffdf7;
+    --red:oklch(0.53 0.19 25);
+    --red-soft:oklch(0.94 0.045 25);
+    --blue:oklch(0.46 0.14 255);
+    --blue-soft:oklch(0.93 0.03 255);
+    --violet:oklch(0.48 0.15 300);
+    --violet-soft:oklch(0.94 0.035 300);
+    --good:oklch(0.58 0.14 150);
+    --good-soft:oklch(0.94 0.05 150);
+    --bad:oklch(0.55 0.18 25);
+    --bad-soft:oklch(0.94 0.06 25);
+    --amber:oklch(0.72 0.15 75);
+    --amber-soft:oklch(0.95 0.05 75);
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'Space Grotesk', Helvetica, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.5; padding-bottom:60px;}
+  .wrap{max-width:920px; margin:0 auto; padding:0 20px;}
+  header.hero{
+    border-bottom:3px solid var(--ink);
+    padding:34px 20px 26px;
+    background:repeating-linear-gradient(135deg, transparent, transparent 26px, rgba(22,21,15,0.03) 26px, rgba(22,21,15,0.03) 27px);
+  }
+  .kicker{font-family:var(--mono); font-size:12.5px; letter-spacing:.06em; color:var(--sub); text-transform:uppercase; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .kicker .dot{color:var(--muted);}
+  h1.title{font-size:clamp(28px,5vw,44px); line-height:1.05; margin:10px 0 6px; font-weight:700; letter-spacing:-0.01em;}
+  .subtitle{color:var(--sub); font-size:16px; max-width:620px;}
+  .prompt{font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:16px;}
+  .backlink{font-family:var(--mono); font-size:12px; color:var(--muted); text-decoration:none; display:inline-block; margin-bottom:12px;}
+  .backlink:hover{color:var(--violet);}
+
+  .badge{display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:3px 10px; border:1.5px solid var(--ink); border-radius:3px; margin-bottom:10px;}
+  .badge.risk{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .badge.red{background:var(--red-soft); border-color:var(--red); color:var(--red);}
+  .badge.blue{background:var(--blue-soft); border-color:var(--blue); color:var(--blue);}
+  .badge.plain{background:var(--card);}
+
+  section{padding:36px 0; border-bottom:1.5px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2.h{font-size:26px; font-weight:700; margin:0 0 6px; letter-spacing:-0.01em;}
+  .lede{color:var(--sub); margin-bottom:20px; max-width:640px;}
+
+  .card{background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:18px 20px; box-shadow:3px 3px 0 rgba(22,21,15,0.08);}
+  ul.tight{margin:8px 0; padding-left:20px;}
+  ul.tight li{margin-bottom:5px;}
+
+  /* Housekeeping */
+  .house-grid{display:grid; gap:12px;}
+  .house-item{background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:14px 16px; display:flex; gap:14px; align-items:flex-start;}
+  .house-item .tag{font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.05em; background:var(--amber-soft); border:1.5px solid var(--ink); border-radius:5px; padding:2px 8px; white-space:nowrap; flex-shrink:0; margin-top:2px;}
+  .house-item a{color:var(--blue); word-break:break-all;}
+
+  /* NIST quote */
+  .nist{border-left:5px solid var(--violet);}
+  .nist blockquote{margin:0 0 12px; font-size:15.5px; color:var(--ink);}
+  .nist mark{background:var(--amber-soft); border-bottom:2px solid var(--amber); padding:0 2px; color:inherit;}
+  .nist-counts{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-top:14px;}
+  .nist-count{border:1.5px solid var(--line); border-radius:7px; background:var(--bg); padding:10px 12px; text-align:center;}
+  .nist-count b{display:block; font-family:var(--mono); font-size:28px; color:var(--violet);}
+  .nist-count span{font-size:12.5px; color:var(--sub);}
+
+  /* Tabs */
+  .loop-tabs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;}
+  .loop-tab{font-family:var(--mono); font-size:12.5px; font-weight:600; border:1.5px solid var(--ink); border-radius:6px; background:var(--card); padding:8px 14px; cursor:pointer; transition:all .15s;}
+  .loop-tab.active{background:var(--violet); color:var(--bg); border-color:var(--violet);}
+  .loop-tab:hover:not(.active){background:var(--violet-soft);}
+  .loop-tab.t-red.active{background:var(--red); border-color:var(--red);}
+  .loop-tab.t-blue.active{background:var(--blue); border-color:var(--blue);}
+  .loop-tab.t-good.active{background:var(--good); border-color:var(--good);}
+  .loop-tab.t-amber.active{background:var(--amber); border-color:var(--amber); color:var(--ink);}
+  .tag-chip{font-family:var(--mono); font-size:11.5px; padding:4px 10px; border:1.5px solid var(--line); border-radius:999px; color:var(--sub); background:var(--bg);}
+
+  /* Responsibility stack */
+  .stack{display:flex; flex-direction:column; gap:4px; margin:14px 0;}
+  .layer{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 12px; border:1.5px solid var(--ink); border-radius:5px; font-size:13.5px; font-weight:600; transition:background .2s;}
+  .layer small{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; font-weight:700;}
+  .layer.you{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .layer.them{background:var(--bg); border-color:var(--line); color:var(--muted);}
+  .ex-row{display:flex; justify-content:space-between; gap:12px; font-size:14px; padding:8px 0; border-top:1px dashed var(--line);}
+  .ex-row strong{color:var(--blue); flex-shrink:0;}
+  .ex-row span{text-align:right;}
+
+  /* Accordion */
+  .acc-item{border:1.5px solid var(--ink); border-radius:8px; background:var(--card); padding:14px 16px; cursor:pointer; margin-bottom:10px; transition:box-shadow .15s;}
+  .acc-item:hover{box-shadow:3px 3px 0 rgba(22,21,15,0.08);}
+  .acc-head{display:flex; justify-content:space-between; align-items:center; gap:10px;}
+  .acc-head strong{font-size:15.5px;}
+  .acc-plus{font-family:var(--mono); font-size:18px; color:var(--violet); flex-shrink:0; transition:transform .2s;}
+  .acc-item.open .acc-plus{transform:rotate(45deg);}
+  .acc-body{max-height:0; overflow:hidden; transition:max-height .25s ease;}
+  .acc-item.open .acc-body{max-height:320px;}
+  .acc-body p{font-size:14px; color:var(--sub); margin:10px 0 0; padding-top:10px; border-top:1px dashed var(--line);}
+  .acc-body .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;}
+
+  /* Stats */
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px;}
+  .stat .big{font-family:var(--mono); font-size:34px; font-weight:700; color:var(--blue); line-height:1.1;}
+  .stat .lbl{font-size:13px; color:var(--sub); margin-top:4px;}
+
+  /* Zone demo */
+  .zone-wrap{display:grid; gap:12px;}
+  .region-box{border:1.5px dashed var(--ink); border-radius:10px; padding:14px; background:var(--card);}
+  .region-name{font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.05em; margin-bottom:10px;}
+  .zones{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px;}
+  .zone{border:1.5px solid var(--ink); border-radius:8px; padding:12px; background:var(--good-soft); cursor:pointer; transition:all .2s; user-select:none;}
+  .zone:hover{box-shadow:3px 3px 0 rgba(22,21,15,0.1);}
+  .zone .zn{font-family:var(--mono); font-size:12.5px; font-weight:700;}
+  .zone .vm{margin-top:8px; font-size:13px; border:1.5px solid var(--good); background:var(--bg); border-radius:5px; padding:6px 8px;}
+  .zone.down{background:var(--bad-soft); border-color:var(--bad); opacity:.85;}
+  .zone.down .vm{border-color:var(--bad); text-decoration:line-through; color:var(--muted);}
+  .zone-status{margin-top:12px; font-size:14px; padding:10px 14px; border-radius:6px; border:1.5px solid var(--ink); background:var(--good-soft); font-weight:600;}
+  .zone-status.warn{background:var(--amber-soft);}
+  .zone-status.bad{background:var(--bad-soft);}
+
+  /* Checklist */
+  .cmd-status{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; background:var(--card); border:1.5px solid var(--ink); border-radius:8px; padding:14px 18px; margin-bottom:14px;}
+  .cmd-count{font-family:var(--mono); font-size:24px; color:var(--violet); font-weight:700;}
+  .cmd-bar-track{flex:1; min-width:140px; height:8px; background:var(--line); border-radius:999px; overflow:hidden;}
+  .cmd-bar-fill{height:100%; width:0%; background:var(--violet); border-radius:999px; transition:width .35s;}
+  .ghost-btn{font-family:var(--mono); font-size:11.5px; letter-spacing:.05em; text-transform:uppercase; padding:7px 13px; background:var(--bg); border:1.5px solid var(--ink); border-radius:999px; color:var(--ink); cursor:pointer;}
+  .ghost-btn:hover{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .cmd-item{display:flex; align-items:flex-start; gap:12px; padding:12px 14px; background:var(--card); border:1.5px solid var(--line); border-radius:7px; cursor:pointer; transition:opacity .2s, border-color .2s; margin-bottom:8px;}
+  .cmd-item.done{opacity:0.55; border-color:var(--good);}
+  .cmd-check{flex-shrink:0; width:22px; height:22px; border-radius:5px; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:13px; color:var(--bg); margin-top:1px; background:var(--bg);}
+  .cmd-item.done .cmd-check{background:var(--good); border-color:var(--good);}
+  .cmd-item p{margin:0; font-size:14.5px;}
+  .cmd-callout{margin-top:14px; background:var(--amber-soft); border:1.5px solid var(--ink); border-left:4px solid var(--amber); border-radius:6px; padding:14px 16px; font-size:13.5px; line-height:1.5; color:var(--sub);}
+
+  /* Cheat sheet */
+  .cheat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px;}
+  .cheat-card .label{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--violet); margin-bottom:6px;}
+  .cheat-card p{font-size:13.5px; line-height:1.45; margin:0; color:var(--sub);}
+
+  /* Quiz */
+  .quiz-card{border:1.5px solid var(--ink); border-radius:8px; padding:16px; background:var(--card); margin-bottom:14px;}
+  .quiz-q{font-weight:600; margin-bottom:10px;}
+  .quiz-opts{display:flex; flex-direction:column; gap:8px;}
+  .quiz-opt{text-align:left; padding:9px 12px; border:1.5px solid var(--line); border-radius:6px; background:var(--bg); cursor:pointer; font-family:var(--sans); font-size:14px; transition:all .15s; color:var(--ink);}
+  .quiz-opt:hover:not(:disabled){border-color:var(--violet);}
+  .quiz-opt.correct{background:var(--good-soft); border-color:var(--good); font-weight:700;}
+  .quiz-opt.wrong{background:var(--bad-soft); border-color:var(--bad);}
+  .quiz-why{display:none; margin-top:10px; font-size:13px; color:var(--sub); border-top:1px dashed var(--line); padding-top:10px;}
+  .quiz-why.show{display:block;}
+  .quizbar{position:sticky; bottom:0; background:var(--ink); color:var(--bg); border-radius:8px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); margin-top:6px;}
+  .quizbar button{font-family:var(--mono); background:var(--bg); color:var(--ink); border:none; border-radius:5px; padding:7px 14px; cursor:pointer; font-weight:700;}
+
+  .quiz-mine{font-family:var(--mono); font-size:11.5px; display:inline-block; margin-top:10px; padding:2px 10px; border-radius:999px; border:1.5px solid;}
+  .quiz-mine.ok{border-color:var(--good); background:var(--good-soft);}
+  .quiz-mine.no{border-color:var(--bad); background:var(--bad-soft);}
+  .pair-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-top:16px;}
+  .pair-card .label{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--red); margin-bottom:6px;}
+  .pair-card p{font-size:13.5px; margin:4px 0; color:var(--sub);}
+
+  footer{text-align:center; font-family:var(--mono); font-size:12px; color:var(--muted); padding:30px 20px 0;}
+  #footerStatus{color:var(--violet); font-weight:600;}
+
+  .flip-inner{transition-timing-function:cubic-bezier(.34,1.56,.64,1);}
+  .flip-card:active .flip-inner{transform:scale(0.97) !important;}
+
+  code{font-family:var(--mono); font-size:12.5px; background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:1px 5px; color:var(--ink);}
+  .scroll-x{overflow-x:auto;}
+  table.cmp{width:100%; border-collapse:collapse; font-size:14px; background:var(--card); border:1.5px solid var(--ink);}
+  .cmp th,.cmp td{padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top;}
+  .cmp th{font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; background:var(--violet-soft); color:var(--violet);}
+  .cmp td:first-child{font-weight:700;}
+  .cmp tr:last-child td{border-bottom:none;}
+  .acc-item.open .acc-body{max-height:900px;}
+  .acc-rich{font-size:14px; color:var(--sub); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);}
+  .acc-rich p{margin:0 0 8px;}
+  .acc-rich ul{margin:6px 0 8px; padding-left:20px;}
+  .acc-rich li{margin-bottom:5px;}
+  .acc-rich blockquote{margin:0 0 8px; padding-left:12px; border-left:3px solid var(--violet);}
+
+  code{font-family:var(--mono); font-size:12.5px; background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:1px 5px; color:var(--ink);}
+  .cmd-detail{display:block; font-size:12.5px; color:var(--muted); margin-top:3px;}
+  .acc-item.open .acc-body{max-height:900px;}
+  .acc-rich{font-size:14px; color:var(--sub); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);}
+  .acc-rich p{margin:0 0 8px;}
+  .acc-rich ul{margin:6px 0 8px; padding-left:20px;}
+  .acc-rich li{margin-bottom:5px;}
+  .acc-rich blockquote{margin:0 0 8px; padding-left:12px; border-left:3px solid var(--violet);}
+  .acc-body ul{margin:8px 0 0; padding-left:20px; font-size:14px; color:var(--sub);}
+  .acc-body li{margin-bottom:4px;}
+  .grid-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px;}
+  .mini h3{font-size:16px; margin:0 0 4px;}
+  .mini p{font-size:13.5px; color:var(--sub); margin:6px 0 0;}
+  .mini .tag-chip{display:inline-block;}
+  .scroll-x{overflow-x:auto;}
+  table.cmp{width:100%; border-collapse:collapse; font-size:14px; background:var(--card); border:1.5px solid var(--ink); border-radius:8px;}
+  .cmp th,.cmp td{padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top;}
+  .cmp th{font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; background:var(--violet-soft); color:var(--violet);}
+  .cmp td:first-child{font-weight:700;}
+  .cmp tr:last-child td{border-bottom:none;}
+  .spec{display:flex; align-items:center; gap:0; margin:0 0 16px;}
+  .spec .dotp{width:14px; height:14px; border-radius:50%; border:1.5px solid var(--ink); background:var(--bg); flex-shrink:0;}
+  .spec .dotp.on{background:var(--violet); border-color:var(--violet); transform:scale(1.35);}
+  .spec .seg{flex:1; height:2px; background:var(--line);}
+  .spec-lbl{display:flex; justify-content:space-between; font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px;}
+  .sim-top{display:flex; flex-direction:column; gap:6px;}
+  .sim-top input[type=range]{width:100%; accent-color:var(--violet);}
+  .sim-meta{font-size:14px; color:var(--sub); margin-top:8px;}
+  .sim-meta b{font-family:var(--mono); color:var(--ink);}
+  .sim-bars{display:flex; gap:6px; align-items:flex-end; height:150px; margin:14px 0 10px;}
+  .sim-bar{flex:1; min-width:16px; max-width:64px; height:100%; border:1.5px solid var(--ink); border-radius:4px 4px 0 0; background:var(--bg); display:flex; align-items:flex-end; overflow:hidden;}
+  .sim-fill{width:100%; transition:height .25s, background .25s;}
+  .steps-list{font-family:var(--mono); font-size:12.5px; color:var(--sub); border-top:1px dashed var(--line); padding-top:10px; display:flex; flex-direction:column; gap:4px;}
+  .steps-list .hd{font-family:var(--sans); font-size:14px; font-weight:700; color:var(--ink); margin-bottom:4px;}
+  .layer.goog{background:var(--blue-soft); border-color:var(--blue); color:var(--blue);}
+  .layer.cust{background:var(--amber-soft); border-color:var(--amber); color:var(--ink);}
+  .meter{display:flex; gap:4px; margin:2px 0 8px;}
+  .meter i{width:26px; height:10px; border:1.5px solid var(--ink); border-radius:3px; background:var(--bg);}
+  .meter i.on{background:var(--violet); border-color:var(--violet);}
+  .tree{font-family:var(--mono); font-size:13px; display:flex; flex-direction:column; gap:5px; margin:10px 0;}
+  .tnode{border:1.5px solid var(--line); border-radius:6px; padding:6px 10px; background:var(--card); cursor:pointer; user-select:none; transition:all .15s;}
+  .tnode.hit{background:var(--violet-soft); border-color:var(--violet); color:var(--violet); font-weight:700;}
+  .tnode.sel{background:var(--violet); border-color:var(--violet); color:var(--bg); font-weight:700;}
+  .perm{font-family:var(--mono); font-size:12px; padding:5px 10px; border:1.5px solid var(--line); border-radius:999px; background:var(--bg); cursor:pointer; user-select:none;}
+  .perm.on{background:var(--good-soft); border-color:var(--good); font-weight:700;}
+  .sorter{display:flex; flex-direction:column; gap:8px;}
+  .sort-row{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; border:1.5px solid var(--line); border-radius:7px; padding:8px 12px; background:var(--card);}
+  .sort-row.ok{border-color:var(--good); background:var(--good-soft);}
+  .sort-row.no{border-color:var(--bad); background:var(--bad-soft);}
+  .vers{display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:8px; margin:10px 0;}
+  .vcell{border:1.5px solid var(--ink); border-radius:6px; padding:8px; text-align:center; font-family:var(--mono); font-size:12px; background:var(--blue-soft);}
+  .vcell.old{opacity:.5; background:var(--bg);}
+  .vm{}
+  .vmgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:6px;}
+  .vbox{display:flex; flex-direction:column; gap:3px;}
+  .vl{border:1.5px solid var(--ink); border-radius:5px; padding:7px 8px; font-size:12.5px; font-weight:600; text-align:center;}
+  .vl.app{background:var(--blue-soft); border-color:var(--blue); color:var(--blue);}
+  .vl.lib{background:var(--violet-soft); border-color:var(--violet); color:var(--violet);}
+  .vl.os{background:var(--amber-soft);}
+  .vl.base{background:var(--bg); border-color:var(--line); color:var(--muted); margin-bottom:3px;}
+  .k8s{border:1.5px dashed var(--ink); border-radius:10px; padding:14px; background:var(--card);}
+  .k8s-nodes{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:10px 0;}
+  .k8s-node{border:1.5px solid var(--ink); border-radius:8px; padding:10px; background:var(--blue-soft); cursor:pointer; user-select:none;}
+  .k8s-node .nn{font-family:var(--mono); font-size:11.5px; font-weight:700; margin-bottom:6px;}
+  .k8s-c{display:inline-block; font-size:11.5px; font-family:var(--mono); background:var(--card); border:1.5px solid var(--violet); color:var(--violet); border-radius:4px; padding:2px 6px; margin:2px 3px 2px 0;}
+  .ev-steps{display:flex; flex-direction:column; gap:6px; margin-top:12px;}
+  .ev-step{border:1.5px solid var(--line); border-radius:6px; padding:8px 12px; font-size:14px; background:var(--bg); opacity:0; transform:translateY(4px); transition:all .25s;}
+  .ev-step.show{opacity:1; transform:none; border-color:var(--violet); background:var(--violet-soft);}
+  .tl{display:grid; grid-template-columns:repeat(12,1fr); gap:3px; margin:6px 0 12px;}
+  .tl .slot{height:34px; border:1.5px solid var(--ink); border-radius:4px; background:var(--bg); cursor:pointer;}
+  .tl .slot.on{background:var(--violet);}
+  .tl.vm .slot{background:var(--amber); cursor:default;}
+  .tl-label{font-family:var(--mono); font-size:11.5px; letter-spacing:.04em; color:var(--sub);}
+  .flow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:12px 0;}
+  .flow .node{border:1.5px solid var(--ink); border-radius:6px; padding:8px 12px; font-size:13px; font-weight:600; background:var(--card);}
+  .flow .arr{font-family:var(--mono); color:var(--muted);}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <a class="backlink" href="index.html">← Class Notes index</a>
+    <div class="kicker">CETE 3370 <span class="dot">·</span> CLOUD COMPUTING <span class="dot">·</span> CLASS 04 <span class="dot">·</span> Module 4</div>
+    <h1 class="title">Security and Identity Fundamentals</h1>
+    <p class="subtitle">From September 15 — Google's five layers of infrastructure security, the shared security model, encryption options, and IAM: policies, inheritance, and the three kinds of roles.</p>
+    <div class="prompt">lvasq@tamusa:~/cloud-computing#</div>
+  </div>
+</header>
+<div class="wrap">
+
+  <section>
+    <span class="badge plain">📌 Admin</span>
+    <h2 class="h">Labs This Module</h2>
+    <div class="house-grid">
+      <div class="house-item"><span class="tag">LAB 1</span><div><strong>Cloud KMS (Key Management Service):</strong> set up a secure Cloud Storage bucket, manage keys and encrypted data with KMS, and view Cloud Storage audit logs.</div></div>
+      <div class="house-item"><span class="tag">LAB 2</span><div><strong>Cloud IAM: Quick Start:</strong> explore the IAM console and project-level roles, prepare a bucket for access testing, remove project access, add Cloud Storage permissions.</div></div>
+      <div class="house-item"><span class="tag">NOTE</span><div>The assignment screenshots and deadlines for these two labs weren't in the materials I had, so check Blackboard for those.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="badge risk">Security in the Cloud</span>
+    <h2 class="h">Five Layers of Infrastructure Security</h2>
+    <p class="lede">Google Cloud is designed with security in mind, and it gives five different layers of protection to keep customers' data safe. Pick a layer.</p>
+    <div class="loop-tabs" id="layTabs"></div>
+    <div class="card" id="layPanel"></div>
+  </section>
+
+  <section>
+    <span class="badge red">Shared Responsibility</span>
+    <h2 class="h">The Shared Security Model</h2>
+    <p class="lede">Security responsibilities are shared between the customer and Google Cloud. The more managed the service, the more Google takes on. <span style="color:var(--amber);">■</span> customer-managed, <span style="color:var(--blue);">■</span> Google-managed.</p>
+    <div class="loop-tabs" id="shTabs"></div>
+    <div class="card" id="shPanel"></div>
+  </section>
+
+  <section>
+    <span class="badge blue">Encryption</span>
+    <h2 class="h">Google Cloud Encryption Options</h2>
+    <p class="lede">A spectrum from limited control and simple to more control and more complex, plus a fourth option off to the side.</p>
+    <div class="loop-tabs" id="encTabs"></div>
+    <div class="card" id="encPanel"></div>
+    <div class="card" style="margin-top:14px;">
+      <strong>Encrypted by default, in transit and at rest</strong>
+      <div class="flow">
+        <span class="node">Client</span><span class="arr">→ TLS →</span><span class="node">Google Cloud network / App Engine</span><span class="arr">→ AES-256 →</span><span class="node">Cloud Storage</span>
+      </div>
+      <p style="font-size:14px; color:var(--sub); margin:0;">In transit: TLS (transport layer security). At rest: AES-256 bit keys.</p>
+    </div>
+  </section>
+
+  <section>
+    <span class="badge risk">IAM</span>
+    <h2 class="h">Who Can Do What on Which Resources</h2>
+    <p class="lede">IAM policies answer three questions. <strong>Who:</strong> a Google Account, a Google group, a service account, or a Cloud Identity domain. <strong>What:</strong> defined with an IAM role. <strong>Which:</strong> a resource in the hierarchy.</p>
+    <div class="card">
+      <strong>Policy inheritance</strong>
+      <p style="font-size:14px; color:var(--sub); margin:6px 0 0;">Click a node to grant a role there. Everything highlighted inherits it.</p>
+      <div class="tree" id="tree"></div>
+      <div class="ex-row"><strong>Applies to</strong><span id="treeOut"></span></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="badge red">IAM Roles</span>
+    <h2 class="h">Basic, Predefined, Custom</h2>
+    <div class="loop-tabs" id="roleTabs"></div>
+    <div class="card" id="rolePanel"></div>
+    <div class="card" style="margin-top:14px;">
+      <strong>Build a Compute Engine role</strong>
+      <p style="font-size:14px; color:var(--sub); margin:6px 0 10px;">Toggle permissions. Slide examples: predefined <code>instanceAdmin</code> has all six; custom <code>instanceOperator</code> has get, list, start, stop.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;" id="perms"></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+        <button class="ghost-btn" id="pAdmin">instanceAdmin (predefined)</button>
+        <button class="ghost-btn" id="pOp">instanceOperator (custom)</button>
+        <button class="ghost-btn" id="pClear">Clear</button>
+      </div>
+      <div class="zone-status" id="permOut" style="margin-top:12px;"></div>
+    </div>
+    <div class="grid-cards" style="margin-top:14px;">
+      <div class="card mini"><h3>Cloud Identity</h3><p>Define user and group policies with the Google Admin Console. Use the same credentials as existing Active Directory or LDAP systems; disable accounts when people leave.</p></div>
+      <div class="card mini"><h3>Identity-Aware Proxy</h3><p>Controls access to cloud-based applications and VMs by verifying user identity, and passes identity info to the app.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="badge blue">Hands-on Labs</span>
+    <h2 class="h">Lab Progress</h2>
+    <div class="cmd-status">
+      <div style="display:flex; align-items:baseline; gap:8px;">
+        <span class="cmd-count" id="lab_count">0</span>
+        <span style="font-family:var(--mono); font-size:12px; color:var(--sub);">/ 7 steps</span>
+      </div>
+      <div class="cmd-bar-track"><div class="cmd-bar-fill" id="lab_bar"></div></div>
+      <button class="ghost-btn" id="lab_reset">Reset</button>
+    </div>
+    <div id="lab_list"></div>
+  </section>
+
+  <!-- FROM THE SLIDES -->
+  <section>
+    <span class="badge risk">From the Slides</span>
+    <h2 class="h">Slide-by-Slide Notes</h2>
+    <p class="lede">Everything on the Module 4 deck, grouped the way the agenda runs, including the speaker notes. Click a row to expand it.</p>
+    <div id="slideNotes"></div>
+  </section>
+
+  <section>
+    <span class="badge blue">Vocabulary</span>
+    <h2 class="h">Terms to Know</h2>
+    <p class="lede">Worded from the slides wherever possible.</p>
+    <div class="scroll-x"><table class="cmp">
+      <tr><th>Term</th><th>Meaning</th></tr>
+      <tr><td>Secure boot stack</td><td style="font-weight:400;">Technologies that ensure Google's servers boot the correct software.</td></tr>
+      <tr><td>Premises security</td><td style="font-weight:400;">Multiple layers of physical protection at Google-designed and -built data centers.</td></tr>
+      <tr><td>U2F (Universal 2nd Factor)</td><td style="font-weight:400;">Open standard for secondary sign-in factors; required Security Keys for all Google employees.</td></tr>
+      <tr><td>Encryption at rest</td><td style="font-weight:400;">Protects data stored on disk, database, backup or cloud storage.</td></tr>
+      <tr><td>Encryption in transit</td><td style="font-weight:400;">Protects data moving over the network; TLS by default.</td></tr>
+      <tr><td>TLS</td><td style="font-weight:400;">Transport layer security.</td></tr>
+      <tr><td>AES-256</td><td style="font-weight:400;">The 256-bit key encryption Google Cloud uses for data at rest by default.</td></tr>
+      <tr><td>Google Front End (GFE)</td><td style="font-weight:400;">Makes sure registered services use TLS with correct certificates; has DoS protections.</td></tr>
+      <tr><td>DoS</td><td style="font-weight:400;">Denial of Service attack.</td></tr>
+      <tr><td>Intrusion detection</td><td style="font-weight:400;">Rules and machine intelligence warn operational security engineers of possible incidents.</td></tr>
+      <tr><td>Shared security model</td><td style="font-weight:400;">Security responsibilities split between customer and Google Cloud.</td></tr>
+      <tr><td>Encryption by default</td><td style="font-weight:400;">Limited control, simplest option: Google encrypts in transit and at rest automatically.</td></tr>
+      <tr><td>Cloud KMS</td><td style="font-weight:400;">Key Management Service: cloud-hosted key management with API, rotation, symmetric and asymmetric keys.</td></tr>
+      <tr><td>CMEK</td><td style="font-weight:400;">Customer-Managed Encryption Keys, managed in Cloud KMS.</td></tr>
+      <tr><td>CSEK</td><td style="font-weight:400;">Customer-Supplied Encryption Keys: you generate and store them and supply them in API calls. More control, more complexity.</td></tr>
+      <tr><td>Client-side encryption</td><td style="font-weight:400;">Encrypting data locally before storing it in the cloud.</td></tr>
+      <tr><td>Persistent disk</td><td style="font-weight:400;">VM disk that is always encrypted, even without CSEK or CMEK.</td></tr>
+      <tr><td>IAM</td><td style="font-weight:400;">Identity and Access Management: policies that define who can do what on which resources.</td></tr>
+      <tr><td>Policy inheritance</td><td style="font-weight:400;">A role granted on a hierarchy element applies to it and everything below.</td></tr>
+      <tr><td>Cloud Identity</td><td style="font-weight:400;">Define and manage users and groups with the Google Admin Console; works with Active Directory or LDAP credentials.</td></tr>
+      <tr><td>Basic role</td><td style="font-weight:400;">Broad roles: Viewer, Editor, Owner (plus Billing administrator).</td></tr>
+      <tr><td>Predefined role</td><td style="font-weight:400;">Role matched to a job need, e.g. Compute Engine instanceAdmin.</td></tr>
+      <tr><td>Custom role</td><td style="font-weight:400;">Role you define with specific permissions, e.g. instanceOperator.</td></tr>
+      <tr><td>Identity-Aware Proxy (IAP)</td><td style="font-weight:400;">Verifies identity and controls access to cloud-based applications and VMs.</td></tr>
+    </table></div>
+  </section>
+
+  <!-- KNOWLEDGE CHECK -->
+  <section>
+    <span class="badge red">Knowledge Check</span>
+    <h2 class="h">Module 4 Knowledge Check, Replayed</h2>
+    <p class="lede">The 10 poll questions from class. Answers you picked in your screenshots are tagged after you answer (they may not be your final submitted answers). The correct answers come from the slides.</p>
+    <div id="kc_container"></div>
+    <div id="kc_bar" class="quizbar">
+      <span><span id="kc_score">0</span>/10 correct</span>
+      <button id="kc_reset">Reset</button>
+    </div>
+    <div class="pair-grid">
+      <div class="card pair-card"><div class="label">Layers (Q1–Q3)</div><p><strong>Hardware</strong> = secure boot, premises.</p><p><strong>Storage services</strong> = encryption at rest.</p><p><strong>Operational security</strong> = intrusion detection, insider risk.</p><p>There is no "application development" layer.</p></div>
+      <div class="card pair-card"><div class="label">Roles (Q9–Q10)</div><p><strong>Basic</strong> roles are the broadest. <strong>Editor</strong> deploys apps, modifies code, configures services.</p><p><strong>Billing administrator</strong> manages billing only.</p></div>
+    </div>
+  </section>
+
+  <!-- SLIDE CHECK -->
+  <section>
+    <span class="badge risk">Slide Check</span>
+    <h2 class="h">Questions From the Slides</h2>
+    <p class="lede">9 extra questions written from the deck itself, since slide wording is what tends to show up on exams. These are mine, not your instructor's.</p>
+    <div id="sc_container"></div>
+    <div id="sc_bar" class="quizbar">
+      <span><span id="sc_score">0</span>/9 correct</span>
+      <button id="sc_reset">Reset</button>
+    </div>
+  </section>
+
+  <!-- CHEAT SHEET -->
+  <section>
+    <span class="badge plain">Cheat Sheet</span>
+    <h2 class="h">The Five-Minute-Before-The-Exam Version</h2>
+    <div class="cheat-grid">
+      <div class="card cheat-card"><div class="label">Five layers</div><p>Hardware infrastructure · Service deployment · Storage services · Internet communication · Operational security.</p></div>
+      <div class="card cheat-card"><div class="label">Defaults</div><p>TLS in transit, AES-256 at rest, with no action needed.</p></div>
+      <div class="card cheat-card"><div class="label">Key options</div><p>Default → CMEK (Cloud KMS) → CSEK (you supply keys) are more control and more complexity. Client-side = encrypt before upload.</p></div>
+      <div class="card cheat-card"><div class="label">Customer always owns</div><p>Content, access policies, usage, even in managed services.</p></div>
+      <div class="card cheat-card"><div class="label">IAM policy</div><p>Who can do what on which resources. Inherited down Organization → Project → resources.</p></div>
+      <div class="card cheat-card"><div class="label">Roles</div><p>Basic (Viewer, Editor, Owner, Billing admin) · Predefined (job-based) · Custom (your exact permissions).</p></div>
+    </div>
+  </section>
+
+</div>
+
+<footer>CETE 3370 — Class 4 · Fall 2026 <br><span id="footerStatus"></span></footer>
+
+<script>
+
+function lsGet(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+function onAct(n,fn){ n.setAttribute('role','button'); n.setAttribute('tabindex','0'); n.addEventListener('click',fn); n.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); fn(); } }); }
+
+function buildFlip(container, items){
+  items.forEach(e=>{
+    const card=document.createElement('div');
+    card.className='flip-card group [perspective:1200px] cursor-pointer select-none';
+    card.setAttribute('role','button'); card.setAttribute('tabindex','0'); card.setAttribute('aria-pressed','false');
+    card.innerHTML=`
+      <div class="flip-inner grid transition-transform duration-700 [transform-style:preserve-3d]" style="transform:rotateY(0deg);">
+        <div class="col-start-1 row-start-1 [backface-visibility:hidden] flex flex-col justify-center gap-2 rounded-lg border-[1.5px] border-[#16150f] bg-[#fffdf7] p-4 min-h-[150px] shadow-[3px_3px_0_rgba(22,21,15,0.08)] transition-shadow duration-300 group-hover:shadow-[5px_5px_0_rgba(22,21,15,0.12)]">
+          <div class="font-mono text-[28px] font-bold" style="color:var(--violet); opacity:.75;">0${e.n}</div>
+          <div class="text-[15px] font-bold text-[#16150f] leading-snug">${e.title}</div>
+        </div>
+        <div class="col-start-1 row-start-1 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col justify-center rounded-lg border-[1.5px] border-[#16150f] p-4 min-h-[150px] text-[13.5px] text-[#f6f3ec]" style="background:var(--violet);">
+          <p class="leading-snug">${e.back}</p>
+        </div>
+      </div>`;
+    const inner=card.querySelector('.flip-inner');
+    function toggle(){ const f=card.getAttribute('aria-pressed')==='true'; card.setAttribute('aria-pressed',String(!f)); inner.style.transform=f?'rotateY(0deg)':'rotateY(180deg)'; }
+    card.addEventListener('click',toggle);
+    card.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); toggle(); } });
+    container.appendChild(card);
+  });
+}
+
+function buildAcc(container, items){
+  items.forEach(a=>{
+    const item=document.createElement('div');
+    item.className='acc-item';
+    item.innerHTML=`<div class="acc-head"><strong>${a.title}</strong><span class="acc-plus">+</span></div>
+      <div class="acc-body">${a.html?`<div class="acc-rich">${a.html}</div>`:`<p>${a.body}</p>`}${a.chips&&a.chips.length?`<div class="chips">${a.chips.map(c=>`<span class="tag-chip">${c}</span>`).join('')}</div>`:''}</div>`;
+    onAct(item,()=>item.classList.toggle('open'));
+    container.appendChild(item);
+  });
+}
+
+function makeTabs(tabsEl, panelEl, items, renderPanel, startId, after){
+  let active=startId||items[0].id;
+  function draw(){
+    tabsEl.innerHTML='';
+    items.forEach(it=>{
+      const b=document.createElement('div');
+      b.className='loop-tab '+(it.cls||'')+(active===it.id?' active':'');
+      b.textContent=it.label;
+      onAct(b,()=>{ active=it.id; draw(); });
+      tabsEl.appendChild(b);
+    });
+    const cur=items.find(i=>i.id===active);
+    panelEl.innerHTML=renderPanel(cur);
+    if(after) after(panelEl,cur);
+  }
+  draw();
+}
+
+function makeChecklist(o){
+  let done=lsGet(o.key,{});
+  function n(){ return Object.values(done).filter(Boolean).length; }
+  function render(){
+    o.list.innerHTML='';
+    o.steps.forEach((s,i)=>{
+      const d=!!done[i];
+      const item=document.createElement('div');
+      item.className='cmd-item'+(d?' done':'');
+      item.innerHTML=`<div class="cmd-check">${d?'✓':''}</div><p>${s.t}${s.d?`<span class="cmd-detail">${s.d}</span>`:''}</p>`;
+      item.addEventListener('click',()=>{ done[i]=!d; lsSet(o.key,done); render(); if(o.onChange) o.onChange(); });
+      o.list.appendChild(item);
+    });
+    o.count.textContent=n();
+    o.bar.style.width=(n()/o.steps.length*100)+'%';
+  }
+  o.reset.addEventListener('click',()=>{ done={}; lsSet(o.key,done); render(); if(o.onChange) o.onChange(); });
+  render();
+  return {count:n,total:o.steps.length};
+}
+
+function makeQuiz(data, container, scoreEl, resetBtn, onChange){
+  const answers={};
+  function score(){ return Object.keys(answers).filter(k=>answers[k]===data[k].correct).length; }
+  function render(){
+    container.innerHTML='';
+    data.forEach((q,qi)=>{
+      const card=document.createElement('div');
+      card.className='quiz-card';
+      const answered=answers[qi]!==undefined;
+      const mine=(answered&&q.mine!==undefined)?`<div class="quiz-mine ${q.mine===q.correct?'ok':'no'}">In class you picked: ${q.opts[q.mine]} ${q.mine===q.correct?'✓':'✗'}</div>`:'';
+      card.innerHTML=`
+        <div class="quiz-q">${qi+1}. ${q.q}</div>
+        <div class="quiz-opts">
+          ${q.opts.map((o,oi)=>{
+            let cls='quiz-opt';
+            if(answered){ if(oi===q.correct) cls+=' correct'; else if(oi===answers[qi]) cls+=' wrong'; }
+            return `<button class="${cls}" data-qi="${qi}" data-oi="${oi}" ${answered?'disabled':''}>${o}</button>`;
+          }).join('')}
+        </div>
+        <div class="quiz-why ${answered?'show':''}">${q.why}${mine?'<br>'+mine:''}</div>`;
+      container.appendChild(card);
+    });
+    container.querySelectorAll('.quiz-opt').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const qi=btn.dataset.qi;
+        if(answers[qi]!==undefined) return;
+        answers[qi]=parseInt(btn.dataset.oi);
+        render(); scoreEl.textContent=score(); onChange();
+      });
+    });
+  }
+  resetBtn.addEventListener('click',()=>{ Object.keys(answers).forEach(k=>delete answers[k]); render(); scoreEl.textContent=score(); onChange(); });
+  render(); scoreEl.textContent=score();
+  return {score};
+}
+
+const layers=[
+ {id:"hw",label:"1 · Hardware",cls:"t-red",title:"Hardware infrastructure layer",sub:"Securing low-level infrastructure",pts:[["Secure boot stack","Google's server machines use a variety of technologies to ensure they boot the correct software stack."],["Premises security","Google designs and builds its own data centers, which incorporate multiple layers of physical security protections."]]},
+ {id:"sd",label:"2 · Service deployment",cls:"t-amber",title:"Service deployment layer",sub:"User identity",pts:[["User identity","Google's identity service challenges users for additional information based on certain risk factors, such as whether they've logged in from the same device or a similar location before."],["Secondary factors","Users can use secondary factors when signing in, including devices based on the Universal 2nd Factor (U2F) open standard."]]},
+ {id:"st",label:"3 · Storage services",cls:"t-blue",title:"Storage services layer",sub:"Encryption at rest",pts:[["Indirect access","Most Google applications access file storage indirectly via storage services."],["Centrally managed keys","Encryption is applied at the layer of these storage services."],["Hardware support","Google also enables hardware encryption support in hard drives and SSDs."]]},
+ {id:"ic",label:"4 · Internet communication",cls:"t-good",title:"Internet communication layer",sub:"Google Front End and DoS protection",pts:[["Google Front End (GFE)","Ensures that all registered services use TLS connections incorporating the correct certificates and following best practices."],["DoS protection","Multi-tier, multi-layer Denial of Service protections reduce the risk of any DoS impact on a service running behind a GFE."]]},
+ {id:"op",label:"5 · Operational security",title:"Operational security layer",sub:"People and process",pts:[["Intrusion detection","Rules and machine intelligence give operational security engineers warnings of possible incidents."],["Reducing insider risk","Google limits and monitors the activities of employees who have access to the infrastructure."],["Employee U2F use","All Google employee accounts require U2F-compatible Security Keys."],["Software development practices","Central source control, and two-party review of any new code."]]}
+];
+makeTabs(document.getElementById('layTabs'),document.getElementById('layPanel'),layers,l=>`
+  <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;"><strong style="font-size:18px;">${l.title}</strong></div>
+  <p style="color:var(--muted); font-family:var(--mono); font-size:12px; margin:0 0 8px;">${l.sub}</p>
+  ${l.pts.map(p=>`<div class="ex-row"><strong>${p[0]}</strong><span>${p[1]}</span></div>`).join('')}`);
+
+const shRows=["Content","Access policies","Usage","Deployment","Web app security","Identity","Operations","Access and authentication","Network security","OS, data, and content","Audit logging","Network","Storage and encryption","Hardware"];
+const shModels=[
+ {id:"on",label:"On-premises",cls:"t-red",cut:14,note:"You manage everything, all the way down to hardware."},
+ {id:"iaas",label:"IaaS",cls:"t-blue",cut:6,note:"You manage content through identity. Google manages operations, access/authentication, network security, OS/data/content, audit logging, network, storage and encryption, and hardware."},
+ {id:"paas",label:"PaaS",cls:"t-good",cut:5,note:"You manage content through web app security. Google also takes on identity and everything below."},
+ {id:"mgd",label:"Managed services",cls:"t-amber",cut:3,note:"You manage only content, access policies and usage."}
+];
+makeTabs(document.getElementById('shTabs'),document.getElementById('shPanel'),shModels,m=>`
+  <div class="stack">${shRows.map((r,i)=>`<div class="layer ${i<m.cut?'cust':'goog'}"><span>${r}</span><small>${i<m.cut?'Customer':'Google'}</small></div>`).join('')}</div>
+  <p style="font-size:14px; color:var(--sub); margin:8px 0 0;">${m.note}</p>`,'iaas');
+
+const encs=[
+ {id:"def",label:"By default",cls:"t-good",ctl:1,cx:1,title:"Encryption by default",pts:["Google Cloud encrypts data in transit and at rest by default.","In transit: TLS. At rest: AES-256 bit keys.","Limited control, simplest."]},
+ {id:"cmek",label:"CMEK",cls:"t-blue",ctl:2,cx:2,title:"Customer-Managed Encryption Keys (CMEK)",pts:["Keys are managed in Cloud KMS (Key Management Service), a cloud-hosted solution.","Encrypt and decrypt via API.","Automated and at-will key rotation (manual, or automated on a time-based interval).","Symmetric and asymmetric key support."]},
+ {id:"csek",label:"CSEK",cls:"t-red",ctl:3,cx:3,title:"Customer-Supplied Encryption Keys (CSEK)",pts:["More control over your keys, with greater management complexity.","You generate the keys, store them, and provide them as part of Google Cloud API calls.","Google uses the provided key to encrypt the data before saving it.","Google guarantees the key only exists in memory and is discarded after use.","Persistent disks: system-defined or customer-supplied keys; data is encrypted before it leaves the instance. They're encrypted even without CSEK or CMEK."]},
+ {id:"cs",label:"Client-side",cls:"t-amber",ctl:0,cx:0,title:"Client-side encryption",pts:["A fourth option: encrypt the data locally before you store it in the cloud.","It sits outside the control/complexity spectrum on the slide."]}
+];
+const meter=n=>`<div class="meter">${[1,2,3].map(i=>`<i class="${i<=n?'on':''}"></i>`).join('')}</div>`;
+makeTabs(document.getElementById('encTabs'),document.getElementById('encPanel'),encs,e=>`
+  <strong style="font-size:18px;">${e.title}</strong>
+  ${e.ctl?`<div style="display:flex; gap:24px; flex-wrap:wrap; margin-top:8px;"><div><div class="tl-label">CONTROL</div>${meter(e.ctl)}</div><div><div class="tl-label">COMPLEXITY</div>${meter(e.cx)}</div></div>`:''}
+  <ul class="tight">${e.pts.map(p=>`<li>${p}</li>`).join('')}</ul>`,'def');
+
+// ---------- IAM tree ----------
+const tnodes=[
+ {id:"org",label:"Organization",p:null,d:0},{id:"proj",label:"Project",p:"org",d:1},
+ {id:"ce",label:"Compute Engine → instance_a",p:"proj",d:2},{id:"ae",label:"App Engine → queue_a",p:"proj",d:2},
+ {id:"gcs",label:"Cloud Storage",p:"proj",d:2},{id:"ba",label:"bucket_a",p:"gcs",d:3},{id:"bb",label:"bucket_b",p:"gcs",d:3},
+ {id:"ps",label:"Pub/Sub → topic_a",p:"proj",d:2},{id:"bq",label:"BigQuery → dataset_a",p:"proj",d:2}
+];
+let tsel="proj";
+function underSel(n){ let c=n; while(c){ if(c.id===tsel) return true; c=tnodes.find(x=>x.id===c.p); } return false; }
+function renderTree(){
+  const box=document.getElementById('tree'); box.innerHTML='';
+  tnodes.forEach(n=>{
+    const d=document.createElement('div');
+    d.className='tnode'+(n.id===tsel?' sel':(underSel(n)?' hit':''));
+    d.style.marginLeft=(n.d*22)+'px';
+    d.textContent=n.label;
+    onAct(d,()=>{ tsel=n.id; renderTree(); });
+    box.appendChild(d);
+  });
+  const hits=tnodes.filter(underSel);
+  document.getElementById('treeOut').textContent = hits.length===tnodes.length ? 'Everything in the hierarchy' : hits.map(h=>h.label.split(' → ')[0]).join(', ');
+}
+renderTree();
+
+// ---------- Roles ----------
+const roles=[
+ {id:"basic",label:"Basic",cls:"t-red",html:`
+  <p style="color:var(--sub); margin:0 0 10px;">Broad in scope, with fixed levels of access. Each level includes the one before it.</p>
+  <div class="stack">
+    <div class="layer you"><span><strong>Viewer</strong></span><small>Read-only access</small></div>
+    <div class="layer you"><span><strong>Editor</strong></span><small>+ Deploy apps, modify code, configure services</small></div>
+    <div class="layer you"><span><strong>Owner</strong></span><small>+ Invite and remove members, delete projects</small></div>
+    <div class="layer cust"><span><strong>Billing administrator</strong></span><small>Manage billing, add/remove administrators</small></div>
+  </div>
+  <p style="font-size:13.5px; color:var(--muted); margin:6px 0 0;">Speaker note: owner can also manage the associated roles and permissions and set up billing.</p>`},
+ {id:"pre",label:"Predefined",cls:"t-blue",html:`
+  <p style="color:var(--sub); margin:0 0 8px;">Match job needs and apply to specific services.</p>
+  <div class="ex-row"><strong>Example</strong><span>Compute Engine <code>instanceAdmin</code></span></div>
+  <div class="ex-row"><strong>Permissions</strong><span><code>compute.instances.delete</code> <code>.get</code> <code>.list</code> <code>.setMachineType</code> <code>.start</code> <code>.stop</code></span></div>`},
+ {id:"cus",label:"Custom",cls:"t-good",html:`
+  <p style="color:var(--sub); margin:0 0 8px;">More specific and flexible: you pick the exact permissions.</p>
+  <div class="ex-row"><strong>Example</strong><span><code>instanceOperator</code></span></div>
+  <div class="ex-row"><strong>Permissions</strong><span><code>get</code> <code>list</code> <code>start</code> <code>stop</code></span></div>
+  <div class="ex-row"><strong>Why</strong><span>Some users can stop and start VMs, but not reconfigure them.</span></div>`}
+];
+makeTabs(document.getElementById('roleTabs'),document.getElementById('rolePanel'),roles,r=>r.html,'basic');
+
+const permNames=["delete","get","list","setMachineType","start","stop"];
+let permOn={get:true,list:true,start:true,stop:true};
+function renderPerms(){
+  const box=document.getElementById('perms'); box.innerHTML='';
+  permNames.forEach(p=>{ const c=document.createElement('span'); c.className='perm'+(permOn[p]?' on':''); c.textContent='compute.instances.'+p; onAct(c,()=>{ permOn[p]=!permOn[p]; renderPerms(); }); box.appendChild(c); });
+  const on=permNames.filter(p=>permOn[p]);
+  const out=document.getElementById('permOut');
+  const can=[]; if(permOn.start&&permOn.stop) can.push('start and stop VMs'); if(permOn.setMachineType) can.push('reconfigure VMs'); if(permOn.delete) can.push('delete VMs'); if(permOn.get||permOn.list) can.push('view VMs');
+  out.className='zone-status'+(on.length===6?' warn':'');
+  out.textContent = on.length===0 ? 'No permissions: this role can do nothing.' : (on.length===6?'Everything: this is instanceAdmin. ':'')+'Can '+can.join(', ')+'.';
+}
+function setPerms(a){ permOn={}; a.forEach(x=>permOn[x]=true); renderPerms(); }
+document.getElementById('pAdmin').addEventListener('click',()=>setPerms(permNames));
+document.getElementById('pOp').addEventListener('click',()=>setPerms(['get','list','start','stop']));
+document.getElementById('pClear').addEventListener('click',()=>setPerms([]));
+renderPerms();
+
+const labSteps=[
+ {t:"KMS lab: set up a secure Cloud Storage bucket",d:""},
+ {t:"KMS lab: manage keys and encrypted data using Key Management Service",d:""},
+ {t:"KMS lab: view Cloud Storage audit logs",d:""},
+ {t:"IAM lab: explore the IAM console and project-level roles",d:""},
+ {t:"IAM lab: prepare a Cloud Storage bucket for access testing",d:""},
+ {t:"IAM lab: remove project access",d:""},
+ {t:"IAM lab: add Cloud Storage permissions",d:""}
+];
+const kcData=[
+ {q:"Which of the following is NOT one of the infrastructure security layers shown in the diagram?",opts:["Operational security layer","Internet communication layer","Application development layer","Hardware infrastructure layer"],correct:2,mine:3,why:"The five layers are hardware infrastructure, service deployment, storage services, internet communication and operational security. There is no application development layer."},
+ {q:"At which level of Google Cloud's infrastructure security will you find intrusion detection?",opts:["The hardware infrastructure level","The storage services level","The internet communication level","The operational security level"],correct:3,mine:0,why:"Intrusion detection (rules and machine intelligence warning operational security engineers) is in the operational security layer."},
+ {q:"At which level of Google Cloud's infrastructure security will you find encryption at REST?",opts:["The hardware infrastructure level","The storage services level","The internet communication level","The operational security level"],correct:1,mine:0,why:"Encryption at rest is applied at the storage services layer, using centrally managed keys."},
+ {q:"Which of the following is not an encryption option for Google Cloud?",opts:["Customer-managed encryption keys (CMEK)","Scripted encryption keys (SEK)","Customer-supplied encryption Keys (CSEK)","Google encryption by default"],correct:1,mine:0,why:"The options are encryption by default, CMEK, CSEK, and client-side encryption. \"Scripted encryption keys\" isn't one."},
+ {q:"When a customer moves an application to Google Cloud, which one of the following does the customer remain responsible for?",opts:["Network integrity","Disk encryption","Data security","Disk encryption"],correct:2,mine:3,why:"Per the shared security model, the customer keeps content, access policies and usage, i.e. data security. Network and storage/encryption are Google-managed. (Two options in the poll both read \"Disk encryption\".)"},
+ {q:"Which encryption methods does Google Cloud use by default for data in transit and data at rest?",opts:["TLS for data in transit and AES-256 for data at rest","AES-256 for data in transit and TLS for data at rest","SSH for data in transit and AES-128 for data at rest","TLS for both data in transit and data at rest"],correct:0,mine:0,why:"TLS in transit, AES-256 at rest."},
+ {q:"With which encryption option does a customer encrypt data before sending it to Google Cloud?",opts:["Client-side encryption","Customer-managed encryption keys (CMEK)","Google encryption by default","Customer-supplied encryption Keys (CSEK)"],correct:0,mine:0,why:"Client-side encryption: encrypt the data locally before you store it in the cloud."},
+ {q:"In Identity and Access Management (IAM), policies define:",opts:["When resources are automatically deleted","Who can do what on which resources","Where cloud data is physically stored","How much each cloud service costs"],correct:1,mine:0,why:"Administrators apply policies that define who can do what on which resources."},
+ {q:"Which IAM role is the most broad in scope?",opts:["Basic","Predefined","Custom"],correct:0,mine:1,why:"Basic roles (viewer, editor, owner) are broad in scope. Predefined roles match job needs; custom roles are the most specific."},
+ {q:"Which Google Cloud IAM basic role allows a user to deploy applications, modify code, and configure services?",opts:["Owner","Editor","Viewer","Billing Administrator"],correct:1,mine:3,why:"Editor: deploy applications, modify code, configure services, plus everything a viewer can do. Owner adds member and project management."}
+];
+
+const slideNotes = [{"title": "Module overview (slides 1\u20132)", "html": "<ul><li><strong>Module 4: Infrastructure Security.</strong> Security in the cloud \u00b7 encryption options \u00b7 authentication and authorization with IAM \u00b7 knowledge check.</li><li>Hands-on labs on the slides: <strong>Cloud KMS (Key Management Service)</strong> and <strong>Cloud IAM: Quick Start</strong>.</li></ul>"}, {"title": "Designed with security in mind (slide 4)", "html": "<ul><li>Services pictured: Cloud Storage, App Engine, Bigtable, Firestore, Cloud SQL, Kubernetes Engine, Compute Engine, Cloud ML.</li><li><em>Speaker note:</em> Google has nine major services: Android, Chrome, Gmail, Drive, Maps, Photos, Search, Play Store, YouTube.</li></ul>"}, {"title": "Five layers of infrastructure security (slide 5)", "html": "<p><em>Speaker note:</em> these provide five different layers of protection to keep customers' data safe.</p><ul><li>Hardware infrastructure layer</li><li>Service deployment layer</li><li>Storage services layer</li><li>Internet communication layer</li><li>Operational security layer</li></ul><p>Anything else (for example an \"application development layer\") is <strong>not</strong> one of the five.</p>"}, {"title": "Hardware infrastructure layer (slide 6)", "html": "<ul><li><strong>Securing low-level infrastructure / secure boot stack:</strong> Google's server machines use a variety of technologies to ensure they are booting the correct software stack.</li><li><strong>Premises security:</strong> Google designs and builds its own data centers, which incorporate multiple layers of physical security protections.</li></ul>"}, {"title": "Service deployment layer (slide 7)", "html": "<ul><li><strong>User identity:</strong> Google's identity service challenges users for additional information based on certain risk factors. <em>Note:</em> such as whether they have logged in from the same device or a similar location in the past.</li><li>Users can use secondary factors when signing in, including devices based on the Universal 2nd Factor (U2F) open standard.</li></ul>"}, {"title": "Storage services layer (slide 8)", "html": "<ul><li><strong>Encryption at rest.</strong> Most Google applications access file storage indirectly via storage services.</li><li>Using centrally managed keys, encryption is applied at the layer of these storage services.</li><li>Google also enables hardware encryption support in hard drives and SSDs.</li><li><em>Note:</em> physical storage means data stored on a disk, database, backup, or cloud storage. Encryption at rest protects this stored data.</li></ul>"}, {"title": "Internet communication layer (slide 9)", "html": "<ul><li><strong>Google Front End (GFE):</strong> ensures that all registered services use TLS connections incorporating the correct certificates and following best practices. (TLS = transport layer security.)</li><li><strong>Denial of Service (DoS) protection:</strong> multi-tier, multi-layer DoS protections reduce the risk of any DoS impact on a service running behind a GFE.</li></ul>"}, {"title": "Operational security layer (slide 10)", "html": "<ul><li><strong>Intrusion detection:</strong> rules and machine intelligence give operational security engineers warnings of possible incidents.</li><li><strong>Reducing insider risk:</strong> Google limits and monitors the activities of employees who have access to the infrastructure.</li><li><strong>Employee Universal Second Factor (U2F) use:</strong> all Google employee accounts require U2F-compatible Security Keys.</li><li><strong>Software development practices:</strong> central source control and two-party review of any new code.</li></ul>"}, {"title": "The shared security model (slide 12)", "html": "<p><strong>Security responsibilities are shared between the customer and Google Cloud.</strong> The slide's chart has 14 rows, top to bottom: content, access policies, usage, deployment, web app security, identity, operations, access and authentication, network security, OS/data/content, audit logging, network, storage and encryption, hardware.</p><ul><li><strong>On-premises:</strong> customer-managed all the way down.</li><li><strong>IaaS:</strong> customer manages content, access policies, usage, deployment, web app security and identity. Google manages operations down through hardware.</li><li><strong>PaaS:</strong> customer manages content, access policies, usage, deployment and web app security. Google manages identity and everything below.</li><li><strong>Managed services:</strong> customer manages only content, access policies and usage.</li><li>So in every cloud model the customer keeps responsibility for <em>content, access policies and usage</em>, i.e. the data and who can touch it.</li></ul>"}, {"title": "Encryption options (slides 14\u201315)", "html": "<p>A spectrum from <strong>limited control / simpler</strong> to <strong>more control / more complex</strong>:</p><ul><li><strong>Encryption by default</strong> (limited control, simplest): Google Cloud encrypts data in transit and at rest by default.</li><li><strong>Customer-Managed Encryption Keys (CMEK)</strong>.</li><li><strong>Customer-Supplied Encryption Keys (CSEK)</strong> (more control, more complex).</li><li><strong>Client-side encryption:</strong> a fourth option, encrypting the data locally before you store it in the cloud.</li><li>Defaults: data <strong>in transit</strong> is encrypted via transport layer security (<strong>TLS</strong>). Data <strong>at rest</strong> is encrypted with <strong>AES-256</strong> bit keys.</li></ul>"}, {"title": "CMEK and Cloud KMS (slide 16)", "html": "<ul><li>Keys live in <strong>Cloud KMS (Key Management Service)</strong>.</li><li>Encrypt and decrypt via API.</li><li>Automated and at-will key rotation. <em>Note:</em> rotate keys manually, and automate rotation on a time-based interval.</li><li>Manage keys in a cloud-hosted solution.</li><li>Symmetric and asymmetric key support.</li></ul>"}, {"title": "CSEK and persistent disks (slides 17\u201318)", "html": "<ul><li>CSEK gives users more control over their keys, but with greater management complexity.</li><li>Users use their own encryption keys and are responsible for generating them.</li><li>Users store the keys and provide them as part of Google Cloud API calls.</li><li>Google Cloud uses the provided key to encrypt the data before saving it. <em>Note:</em> Google guarantees the key exists only in memory and is discarded after use.</li><li><strong>Persistent disk encryption:</strong> system-defined or customer-supplied keys; data is encrypted before it leaves the instance. <em>Note:</em> a VM can access its persistent disk, CSEK or CMEK can be used, and even without CSEK or CMEK persistent disks are still encrypted.</li></ul>"}, {"title": "IAM, policies and Cloud Identity (slides 22\u201325)", "html": "<ul><li><strong>IAM applies policies.</strong> Administrators can apply policies that define <em>who can do what on which resources</em>.</li><li><em>Note:</em> <strong>who</strong> = a Google Account, a Google group, a service account, or a Cloud Identity domain. <strong>What</strong> = defined with an IAM role.</li><li><strong>Policy inheritance</strong>: hierarchy of Organization \u2192 Project \u2192 resources (App Engine, Cloud Storage, Compute Engine, Pub/Sub, BigQuery, with examples like instance_a, bucket_a, topic_a, dataset_a). <em>Note:</em> when a user, group or account is given a role on an element of the hierarchy, the resulting policy applies to that element and all elements below it.</li><li><strong>Cloud Identity</strong> defines user and group policies; organizations manage users and groups using the Google Admin Console. Log in and manage resources with the same credentials used in existing Active Directory or LDAP systems. The Admin Console can disable user accounts and remove them from groups when they leave. Available in free and premium editions, and to Google Workspace customers in the Admin Console.</li></ul>"}, {"title": "The three kinds of IAM roles (slides 26\u201330)", "html": "<ul><li><strong>Basic roles</strong> are broad in scope: viewers, editors, owners. <em>Notes:</em> viewer = examine resources; editor = examine and modify resources; owner = examine and modify, manage the associated roles and permissions, and set up billing.</li><li>Slide 28, fixed levels of access: <strong>Viewer</strong> = read-only access. <strong>Editor</strong> = deploy applications, modify code, configure services, plus what a viewer can do. <strong>Owner</strong> = invite members, remove members, delete projects, plus what an editor and viewer can do. <strong>Billing administrator</strong> = manage billing, add and remove administrators.</li><li><strong>Predefined roles</strong> match job needs. Example: Compute Engine <code>instanceAdmin</code> with predefined actions <code>compute.instances.delete / get / list / setMachineType / start / stop</code>.</li><li><strong>Custom roles</strong> are more specific and flexible. Example: <code>instanceOperator</code> with <code>get / list / start / stop</code>. <em>Note:</em> lets some users stop and start Compute Engine VMs but not reconfigure them.</li></ul>"}, {"title": "Identity-Aware Proxy (slide 31)", "html": "<ul><li>Restrict access to the application and provide user identity information to it.</li><li>Control access to cloud-based applications and VMs running.</li><li>Verify user identity to determine if a user can be granted access.</li><li>Slide examples of protected apps: ERP and CRM (enterprise resource planning, customer relationship management).</li></ul>"}, {"title": "Labs on the slides (slides 20, 33)", "html": "<ul><li><strong>Cloud KMS:</strong> setting up a secure Cloud Storage bucket; managing keys and encrypted data using Key Management Service; viewing Cloud Storage audit logs.</li><li><strong>Cloud IAM: Quick Start:</strong> explore the IAM console and project-level roles; prepare a Cloud Storage bucket for access testing; remove project access; add Cloud Storage permissions.</li></ul>"}];
+const scData = [{"q": "Which component ensures all registered services use TLS connections with the correct certificates?", "opts": ["Cloud KMS", "Google Front End (GFE)", "Identity-Aware Proxy", "Persistent disk"], "correct": 1, "why": "The Google Front End (GFE), in the internet communication layer. It also provides DoS protections for services behind it."}, {"q": "Which layer requires U2F-compatible Security Keys for all Google employee accounts?", "opts": ["Hardware infrastructure", "Service deployment", "Storage services", "Operational security"], "correct": 3, "why": "Operational security: intrusion detection, reducing insider risk, employee U2F use, and software development practices (two-party code review)."}, {"q": "A role is granted to a user on a Project. Where does the policy apply?", "opts": ["Only the Organization", "Only the Project itself", "The Project and all resources below it", "All projects in the Organization"], "correct": 2, "why": "A policy applies to the chosen element and all the elements below it in the hierarchy."}, {"q": "Which encryption option gives users more control over keys but with greater management complexity?", "opts": ["Encryption by default", "CMEK", "CSEK", "None: all options are equally complex"], "correct": 2, "why": "CSEK: you generate and store the keys and supply them in API calls. The spectrum runs default \u2192 CMEK \u2192 CSEK."}, {"q": "With CSEK, what does Google guarantee about your key?", "opts": ["It's stored permanently in Cloud KMS", "It exists only in memory and is discarded after use", "It's emailed to the account owner", "It's rotated every day automatically"], "correct": 1, "why": "Google uses the provided key to encrypt data before saving it, and guarantees the key only exists in memory and is discarded after use."}, {"q": "You want some users to start and stop Compute Engine VMs but not reconfigure them. Which role type fits?", "opts": ["Basic role: Owner", "Basic role: Viewer", "Predefined role: instanceAdmin", "Custom role: e.g. instanceOperator"], "correct": 3, "why": "A custom role with get, list, start and stop, but not setMachineType."}, {"q": "In the managed-services column of the shared security model, which items does the customer still manage?", "opts": ["Content, access policies and usage", "Hardware and network", "Storage and encryption", "Operations and audit logging"], "correct": 0, "why": "Even in managed services the customer keeps content, access policies and usage. Everything lower is Google-managed."}, {"q": "What does Identity-Aware Proxy (IAP) do?", "opts": ["Encrypts persistent disks", "Restricts access to applications and verifies user identity", "Rotates Cloud KMS keys", "Detects intrusions in data centers"], "correct": 1, "why": "IAP controls access to cloud-based applications and VMs, verifying user identity to decide whether access is granted."}, {"q": "Which tool does Cloud Identity use to define user and group policies?", "opts": ["Google Admin Console", "Cloud Shell", "Cloud Build", "Google Front End"], "correct": 0, "why": "Organizations manage users and groups with the Google Admin Console, which can also disable accounts when people leave."}];
+buildAcc(document.getElementById('slideNotes'), slideNotes);
+const sc = makeQuiz(scData, document.getElementById('sc_container'), document.getElementById('sc_score'), document.getElementById('sc_reset'), ()=>updateFooter());
+// ---------- Checklist + quiz ----------
+const lab = makeChecklist({list:document.getElementById('lab_list'), count:document.getElementById('lab_count'), bar:document.getElementById('lab_bar'), reset:document.getElementById('lab_reset'), steps:labSteps, key:'cloud-w4-lab', onChange:()=>updateFooter()});
+const kc = makeQuiz(kcData, document.getElementById('kc_container'), document.getElementById('kc_score'), document.getElementById('kc_reset'), ()=>updateFooter());
+
+function updateFooter(){
+  document.getElementById('footerStatus').textContent=`${lab.count()}/${lab.total} lab steps · ${kc.score()}/${kcData.length} on the knowledge check · ${sc.score()}/${scData.length} on the slide check`;
+}
+updateFooter();
+</script>
+</body>
+</html>
